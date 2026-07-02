@@ -1,0 +1,26 @@
+{
+  "name": "claim-comparison",
+  "private": true,
+  "version": "3.0.0",
+  "description": "Bowtie · Claim Comparison — internal staff tool (VHIS plan coverage comparison + indicative quotes)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "build:single": "tsc --noEmit && vite build --mode singlefile",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.5",
+    "vite-plugin-singlefile": "^2.1.0"
+  }
+}

@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Bowtie · Claim Comparison — Left rail options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="colors_and_type.css" />
+<style>
+  body { background: var(--bt-pebble); }
+
+  /* — App chrome — */
+  .cc-topbar { display: flex; align-items: center; gap: 16px; padding: 18px 32px; background: var(--bt-white); border-bottom: 1px solid var(--bt-stone); position: sticky; top: 0; z-index: 10; }
+  .cc-brand { display: flex; align-items: center; gap: 12px; }
+  .cc-wordmark { font: 900 24px/1 var(--bt-font); color: var(--bt-bowtie-blue); letter-spacing: -0.01em; }
+  .cc-tool-badge { font: 700 12px/1 var(--bt-font); color: var(--bt-bowtie-pink); background: var(--bt-blush); padding: 6px 12px; border-radius: var(--bt-radius-pill); letter-spacing: 0.02em; }
+  .cc-topbar-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+
+  /* — Layout — */
+  .cc-main {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    grid-template-areas: "left combined";
+    gap: 16px;
+    padding: 20px;
+    min-height: calc(100vh - 73px);
+    align-items: start;
+  }
+  .cc-area-left     { grid-area: left; }
+  .cc-area-combined { grid-area: combined; }
+
+  /* — Stacked left panel (Case + Configure) — */
+  .cc-left-stack { padding: 0; }
+  .cc-left-stack > .cc-stack-side { padding: 24px; }
+  .cc-left-stack > .cc-stack-side + .cc-stack-side { border-top: 1px solid var(--bt-stone); }
+
+  /* — Combined chart + message panel — */
+  .cc-combined {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    padding: 0;
+  }
+  .cc-combined > .cc-combined-side {
+    padding: 24px;
+  }
+  .cc-combined > .cc-combined-side + .cc-combined-side {
+    border-left: 1px solid var(--bt-stone);
+  }
+
+  /* — Panel — */
+  .cc-panel { background: var(--bt-white); border-radius: var(--bt-radius-m); padding: 24px; box-shadow: var(--bt-shadow-1); }
+  .cc-panel-tight { padding: 20px; }
+  .cc-panel-h1 { font: 700 22px/1.3 var(--bt-font); color: var(--bt-bowtie-blue); margin: 0 0 4px; }
+  .cc-panel-sub { font: 400 13px/1.4 var(--bt-font); color: var(--bt-graphite); margin: 0 0 18px; }
+  .cc-section-label { display: block; font: 700 11px/1 var(--bt-font); color: var(--bt-graphite); letter-spacing: 0.08em; text-transform: uppercase; margin: 22px 0 10px; }
+  .cc-section-label:first-child { margin-top: 0; }
+  .cc-section-label .step-num { color: var(--bt-bowtie-pink); margin-right: 6px; }
+  .cc-section-label .pink { color: var(--bt-bowtie-pink); }
+
+  /* — Segmented control (like 女/男 in ref) — */
+  .cc-seg { display: inline-flex; background: var(--bt-pebble); border-radius: var(--bt-radius-pill); padding: 4px; gap: 2px; width: 100%; }
+  .cc-seg button { flex: 1; border: 0; background: transparent; padding: 8px 10px; font: 500 13px/1 var(--bt-font); color: var(--bt-graphite); border-radius: var(--bt-radius-pill); cursor: pointer; transition: all var(--bt-duration-fast) var(--bt-ease); white-space: nowrap; }
+  .cc-seg button.on { background: var(--bt-bowtie-pink); color: var(--bt-white); font-weight: 700; }
+  .cc-seg button:hover:not(.on) { color: var(--bt-ink); }
+
+  /* — Pill chip — */
+  .cc-chip { display: inline-flex; align-items: center; gap: 4px; font: 500 12px/1 var(--bt-font); color: var(--bt-graphite); background: var(--bt-stone); padding: 4px 10px; border-radius: var(--bt-radius-pill); white-space: nowrap; }
+
+  /* — Pill button (light) — */
+  .cc-pill-btn { display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--bt-font); color: var(--bt-ink); background: var(--bt-white); border: 1px solid var(--bt-stone); padding: 8px 14px; border-radius: var(--bt-radius-pill); cursor: pointer; transition: all var(--bt-duration-fast) var(--bt-ease); }
+  .cc-pill-btn:hover { border-color: var(--bt-bowtie-pink); color: var(--bt-bowtie-pink); }
+
+  /* — Plus / circle button — */
+  .cc-add-btn { width: 28px; height: 28px; border-radius: 50%; background: var(--bt-bowtie-pink); color: var(--bt-white); border: 0; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all var(--bt-duration-fast) var(--bt-ease); }
+  .cc-add-btn:hover { background: var(--bt-dragon-fruit); }
+  .cc-add-btn.added { background: var(--bt-green-day); }
+  .cc-add-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.5; }
+
+  /* — Toggle switch — */
+  .cc-toggle { width: 40px; height: 22px; background: var(--bt-stone); border-radius: var(--bt-radius-pill); position: relative; cursor: pointer; transition: background var(--bt-duration-fast) var(--bt-ease); border: 0; padding: 0; }
+  .cc-toggle.on { background: var(--bt-green-day); }
+  .cc-toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--bt-white); transition: transform var(--bt-duration-fast) var(--bt-ease); }
+  .cc-toggle.on::after { transform: translateX(18px); }
+
+  /* — Number input — */
+  .cc-input { width: 100%; padding: 8px 12px; border-radius: var(--bt-radius-s); border: 1px solid var(--bt-stone); background: var(--bt-white); font: 500 14px/1.2 var(--bt-font); color: var(--bt-ink); outline: none; transition: border-color var(--bt-duration-fast) var(--bt-ease); box-sizing: border-box; }
+  .cc-input:focus { border-color: var(--bt-bowtie-pink); }
+  .cc-input-label { font: 500 11px/1 var(--bt-font); color: var(--bt-graphite); margin-bottom: 6px; display: block; letter-spacing: 0.02em; }
+
+  /* — Custom scrollbar — */
+  .cc-scroll { overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--bt-rock) transparent; }
+  .cc-scroll::-webkit-scrollbar { width: 6px; }
+  .cc-scroll::-webkit-scrollbar-thumb { background: var(--bt-rock); border-radius: 3px; }
+
+  /* — Plain text button — */
+  .cc-link { background: transparent; border: 0; font: 500 13px/1 var(--bt-font); color: var(--bt-graphite); cursor: pointer; padding: 6px 8px; }
+  .cc-link:hover { color: var(--bt-bowtie-pink); }
+</style>
+</head>
+<body>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="cc-data.jsx"></script>
+<script type="text/babel" src="cc-input-panel.jsx"></script>
+<script type="text/babel" src="cc-input-panel-v2.jsx"></script>
+<script type="text/babel" src="cc-chart-panel.jsx"></script>
+<script type="text/babel" src="cc-chart-panel-v2.jsx"></script>
+<script type="text/babel" src="cc-message-panel.jsx"></script>
+<script type="text/babel" src="cc-message-panel-v2.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="cc-app-v2.jsx"></script>
+
+<div id="root"></div>
+
+</body>
+</html>

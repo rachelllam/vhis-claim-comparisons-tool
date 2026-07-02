@@ -1,0 +1,115 @@
+import { VHIS_PLANS, casesFromIds } from '../data';
+import type { SelectedPlan, CoverageView } from '../types';
+import { ccV2 } from './chartStyles';
+
+// ── Coverage lens bar: two rows of browser tabs (Cases / Plans) ──
+// Sits ABOVE the whole combined panel; controls cv.mode + focus selection.
+export function CoverageTabsBar({
+  plans,
+  cv,
+  onRemove,
+  onRemoveCase,
+}: {
+  plans: SelectedPlan[];
+  cv: CoverageView;
+  onRemove: (id: string) => void;
+  onRemoveCase: (en: string) => void;
+}) {
+  const mode = cv.mode;
+  const setMode = cv.setMode;
+  const activePlans = plans.filter(Boolean);
+  const chosenCases = casesFromIds(cv.selectedCaseIds);
+  const resolvedCaseId = (chosenCases.find((c) => c.en === cv.focusCaseId) || chosenCases[0] || ({} as { en?: string })).en;
+  const resolvedPlanId = (activePlans.find((p) => p.id === cv.focusPlanId) || activePlans[0] || ({} as { id?: string })).id;
+  const caseIcon = (
+    <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="var(--bt-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1.5 3.5a1 1 0 0 1 1-1h2l1 1.2h3.5a1 1 0 0 1 1 1v3.8a1 1 0 0 1-1 1h-6.5a1 1 0 0 1-1-1z"></path>
+    </svg>
+  );
+  const planIcon = (
+    <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="var(--bt-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="1.5" width="8" height="9" rx="1.5"></rect>
+      <path d="M4 4.5h4M4 6.5h4M4 8.5h2.5"></path>
+    </svg>
+  );
+  const TabBtn = ({
+    favColor,
+    icon,
+    label,
+    on,
+    onClick,
+    onClose,
+  }: {
+    favColor: string;
+    icon: React.ReactNode;
+    label: string;
+    on: boolean;
+    onClick: () => void;
+    onClose: () => void;
+  }) => (
+    <button
+      style={ccV2.bTab(on)}
+      onClick={onClick}
+      role="tab"
+      aria-selected={on}
+      onMouseEnter={(e) => { if (!on) e.currentTarget.style.background = 'rgba(255,255,255,0.55)'; }}
+      onMouseLeave={(e) => { if (!on) e.currentTarget.style.background = 'transparent'; }}
+    >
+      <span style={ccV2.bFav(favColor)}>{icon}</span>
+      <span style={ccV2.bTabLabel}>{label}</span>
+      <span
+        style={ccV2.bTabX(on)}
+        role="button"
+        title="Remove from comparison"
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+      >
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <path d="M3 3l6 6M9 3l-6 6"></path>
+        </svg>
+      </span>
+    </button>
+  );
+  return (
+    <div>
+      <div style={ccV2.tabStrip} role="tablist">
+        <span style={ccV2.groupLabel('var(--bt-bowtie-pink)')}>Cases</span>
+        {chosenCases.length === 0 ? (
+          <span style={ccV2.emptyHint}>Pick surgeries in the Case tab →</span>
+        ) : (
+          chosenCases.map((c) => (
+            <TabBtn
+              key={c.en}
+              favColor="var(--bt-bowtie-pink)"
+              icon={caseIcon}
+              label={c.simple || c.en}
+              on={mode === 'case' && c.en === resolvedCaseId}
+              onClick={() => { setMode('case'); cv.setFocusCaseId(c.en); }}
+              onClose={() => onRemoveCase(c.en)}
+            />
+          ))
+        )}
+      </div>
+      <div style={ccV2.tabStrip2} role="tablist">
+        <span style={ccV2.groupLabel('var(--bt-bowtie-blue)')}>Plans</span>
+        {activePlans.length === 0 ? (
+          <span style={ccV2.emptyHint}>Pick plans in the Plan tab →</span>
+        ) : (
+          activePlans.map((p) => {
+            const def = VHIS_PLANS.find((v) => v.id === p.id);
+            return (
+              <TabBtn
+                key={p.id}
+                favColor="var(--bt-bowtie-blue)"
+                icon={planIcon}
+                label={def ? def.en : p.id}
+                on={mode === 'plan' && p.id === resolvedPlanId}
+                onClick={() => { setMode('plan'); cv.setFocusPlanId(p.id); }}
+                onClose={() => onRemove(p.id)}
+              />
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}

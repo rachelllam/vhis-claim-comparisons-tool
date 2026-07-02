@@ -1,0 +1,234 @@
+/*
+ * Bowtie Design System — Colors & Type
+ * Source: bowtie-ins/bowkit (tokens.json, theme/color.ts, palette.ts, muiTheme.ts)
+ *
+ * Fonts:
+ *   - Gilroy (Latin / EN) — licensed via Bowtie; hosted at www.bowtie.com.hk/assets/fonts/
+ *   - Noto Sans TC (Chinese) — self-hosted variable TTF at assets/fonts/
+ *     (brand-uploaded; no Google Fonts dependency)
+ *
+ * NOTE: Gilroy is a commercial font. We load it from Bowtie's own CDN.
+ *       If the CDN is unavailable in an export, fall back to a geometric sans
+ *       (e.g. HK Grotesk, Poppins) and flag the substitution to the brand team.
+ */
+
+@font-face {
+  font-family: 'Noto Sans TC';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('assets/fonts/NotoSansTC-VariableFont_wght.ttf') format('truetype-variations'),
+       url('assets/fonts/NotoSansTC-VariableFont_wght.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Gilroy';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 400;
+  src:
+    url('https://www.bowtie.com.hk/assets/fonts/gilroy-regular.woff2') format('woff2'),
+    url('https://www.bowtie.com.hk/assets/fonts/gilroy-regular.woff') format('woff');
+}
+@font-face {
+  font-family: 'Gilroy';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src:
+    url('https://www.bowtie.com.hk/assets/fonts/gilroy-medium.woff2') format('woff2'),
+    url('https://www.bowtie.com.hk/assets/fonts/gilroy-medium.woff') format('woff');
+}
+@font-face {
+  font-family: 'Gilroy';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600 700;
+  src:
+    url('https://www.bowtie.com.hk/assets/fonts/gilroy-bold.woff2') format('woff2'),
+    url('https://www.bowtie.com.hk/assets/fonts/gilroy-bold.woff') format('woff');
+}
+
+:root {
+  /* ——— Primary ——— */
+  --bt-bowtie-pink: #ff0068;    /* Brand primary. Use sparingly — CTAs, links, accents. */
+  --bt-bowtie-blue: #191357;    /* Brand secondary / wordmark ink. */
+  --bt-ink:         #2a2e42;    /* Default body text. */
+  --bt-graphite:    #687188;    /* Secondary text, hints, de-emphasised copy. */
+  --bt-white:       #ffffff;
+
+  /* ——— Accents (extended pink + indigo families) ——— */
+  --bt-dragon-fruit: #df005b;   /* Darker pink — pressed states. */
+  --bt-bubble-gum:   #ffbfd9;   /* Lighter pink — pressed backgrounds. */
+  --bt-blush:        #ffebf3;   /* Lightest pink — hover backgrounds, badges. */
+  --bt-indigo:       #130e41;   /* Deeper than bowtie-blue — pressed secondary text. */
+  --bt-smurf:        #426ce2;   /* Secondary pressed background. */
+  --bt-lilac:        #d7dfff;   /* Secondary hover background. */
+
+  /* ——— Neutrals ——— */
+  --bt-rock:    #c2c6d1;        /* Disabled text, placeholders. */
+  --bt-stone:   #ebecf0;        /* Divider, disabled surface. */
+  --bt-pebble:  #f6f6f9;        /* Default page background. */
+
+  /* ——— Alert ——— */
+  --bt-green-day:         #0bc28d;  /* Success. */
+  --bt-green-day-light:   #e7f9f4;
+  --bt-hotel-california:  #f05f00;  /* Error / destructive. */
+  --bt-hotel-california-light: #feefe6;
+  --bt-yellow-submarine:  #ffaa00;  /* Warning. */
+
+  /* ——— Transparencies ——— */
+  --bt-ink-50:       rgba(42, 46, 66, 0.50);
+  --bt-ink-20:       rgba(42, 46, 66, 0.20); /* Default card shadow tint. */
+  --bt-ink-10:       rgba(42, 46, 66, 0.10);
+  --bt-graphite-50:  rgba(104, 113, 136, 0.50);
+  --bt-graphite-20:  rgba(104, 113, 136, 0.20);
+  --bt-graphite-10:  rgba(104, 113, 136, 0.10);
+
+  /* ——— Semantic colour roles (bowkit color.ts) ——— */
+  --bt-bg-surface-primary:   var(--bt-white);
+  --bt-bg-surface-secondary: var(--bt-pebble);
+  --bt-bg-surface-disabled:  var(--bt-stone);
+  --bt-bg-primary:           var(--bt-bowtie-pink);
+  --bt-bg-primary-light:     var(--bt-blush);
+  --bt-bg-primary-medium:    var(--bt-bubble-gum);
+  --bt-bg-primary-dark:      var(--bt-dragon-fruit);
+  --bt-bg-secondary:         var(--bt-bowtie-blue);
+  --bt-bg-secondary-light:   var(--bt-lilac);
+  --bt-bg-secondary-medium:  var(--bt-smurf);
+  --bt-bg-positive-dark:     var(--bt-green-day);
+  --bt-bg-positive-light:    var(--bt-green-day-light);
+  --bt-bg-negative-dark:     var(--bt-hotel-california);
+  --bt-bg-negative-light:    var(--bt-hotel-california-light);
+  --bt-bg-warning:           var(--bt-yellow-submarine);
+
+  --bt-text-primary:         var(--bt-ink);
+  --bt-text-secondary:       var(--bt-graphite);
+  --bt-text-invert:          var(--bt-white);
+  --bt-text-brand:           var(--bt-bowtie-pink);
+  --bt-text-brand-secondary: var(--bt-bowtie-blue);
+  --bt-text-disabled:        var(--bt-rock);
+  --bt-text-positive:        var(--bt-green-day);
+  --bt-text-negative:        var(--bt-hotel-california);
+
+  --bt-border-primary:        var(--bt-stone);
+  --bt-border-secondary:      var(--bt-rock);
+  --bt-border-brand:          var(--bt-bowtie-pink);
+  --bt-border-brand-secondary:var(--bt-bowtie-blue);
+  --bt-border-focused:        #6385e7;
+
+  /* ——— Typography ——— */
+  --bt-font-en: 'Gilroy', 'Noto Sans TC', Helvetica, Arial, sans-serif;
+  --bt-font-zh: 'Noto Sans TC', 'Gilroy', Helvetica, Arial, sans-serif;
+  --bt-font: var(--bt-font-en);
+
+  --bt-fw-regular: 400;
+  --bt-fw-medium:  500;
+  --bt-fw-bold:    700;
+
+  --bt-fs-1: 0.75rem;   /* 12 */
+  --bt-fs-2: 0.875rem;  /* 14 */
+  --bt-fs-3: 1rem;      /* 16 — body baseline */
+  --bt-fs-4: 1.125rem;  /* 18 */
+  --bt-fs-5: 1.25rem;   /* 20 */
+  --bt-fs-6: 1.5rem;    /* 24 */
+  --bt-fs-7: 2rem;      /* 32 */
+  --bt-fs-8: 2.5rem;    /* 40 */
+
+  --bt-lh-1: 1rem;
+  --bt-lh-2: 1.5rem;
+  --bt-lh-3: 1.75rem;
+  --bt-lh-4: 1.875rem;
+  --bt-lh-5: 2rem;
+  --bt-lh-6: 2.5rem;
+  --bt-lh-7: 3rem;
+  --bt-lh-8: 3.5rem;
+
+  /* letter spacing (source expresses as %) */
+  --bt-ls-0: 0;
+  --bt-ls-1: 0.0025em;
+  --bt-ls-2: 0.005em;
+  --bt-ls-3: 0.015em;
+  --bt-ls-4: 0.035em;
+  --bt-ls-5: 0.05em;
+
+  /* ——— Radius ——— */
+  --bt-radius-xs: 4px;
+  --bt-radius-s:  8px;
+  --bt-radius-m:  16px;
+  --bt-radius-l:  32px;
+  --bt-radius-pill: 100px;      /* Buttons are fully rounded. */
+  --bt-radius-full: 50%;
+
+  /* ——— Spacing (MUI base 8, 6 recommended steps) ——— */
+  --bt-space-1:  8px;
+  --bt-space-2: 16px;
+  --bt-space-3: 24px;
+  --bt-space-4: 32px;
+  --bt-space-6: 48px;
+  --bt-space-8: 64px;
+
+  /* ——— Elevations (bowkit shadows.ts — levels 1..4) ——— */
+  --bt-shadow-1: 0 3px 12px -6px var(--bt-ink-20);
+  --bt-shadow-2: 0 5px 20px -6px var(--bt-ink-20);
+  --bt-shadow-3: 0 4px 32px -2px var(--bt-ink-20);  /* graphite variant available */
+  --bt-shadow-3-graphite: 0 4px 32px -2px var(--bt-graphite-20);
+
+  /* ——— Motion ——— */
+  --bt-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --bt-duration-fast: 150ms;
+  --bt-duration-base: 200ms;
+  --bt-duration-slow: 300ms;
+}
+
+/* ——— Baseline — mirrors bowkit BaselineStyles.tsx ——— */
+html {
+  font-feature-settings: 'kern';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+*, *::before, *::after { box-sizing: inherit; }
+
+body {
+  margin: 0;
+  background-color: var(--bt-pebble);
+  color: var(--bt-ink);
+  font-family: var(--bt-font);
+  font-size: var(--bt-fs-2);
+  font-weight: var(--bt-fw-regular);
+  line-height: var(--bt-lh-2);
+  letter-spacing: var(--bt-ls-2);
+}
+
+strong, b { font-weight: var(--bt-fw-bold); }
+
+/* ——— Semantic type classes (matches bowkit Typography variants) ——— */
+/* Headline — page headers */
+.bt-headline-l { font: var(--bt-fw-bold) var(--bt-fs-8)/var(--bt-lh-8) var(--bt-font); letter-spacing: var(--bt-ls-0); }
+.bt-headline-m { font: var(--bt-fw-bold) var(--bt-fs-7)/var(--bt-lh-7) var(--bt-font); letter-spacing: var(--bt-ls-0); }
+.bt-headline-s { font: var(--bt-fw-bold) var(--bt-fs-6)/var(--bt-lh-6) var(--bt-font); letter-spacing: var(--bt-ls-0); }
+
+/* Title — card / section headers */
+.bt-title-l { font: var(--bt-fw-bold) var(--bt-fs-5)/var(--bt-lh-5) var(--bt-font); letter-spacing: var(--bt-ls-1); }
+.bt-title-m { font: var(--bt-fw-bold) var(--bt-fs-4)/var(--bt-lh-4) var(--bt-font); letter-spacing: var(--bt-ls-2); }
+.bt-title-s { font: var(--bt-fw-bold) var(--bt-fs-2)/var(--bt-lh-2) var(--bt-font); letter-spacing: var(--bt-ls-3); }
+
+/* Body — paragraphs */
+.bt-body-l { font: var(--bt-fw-regular) var(--bt-fs-3)/var(--bt-lh-3) var(--bt-font); letter-spacing: var(--bt-ls-2); }
+.bt-body-m { font: var(--bt-fw-regular) var(--bt-fs-2)/var(--bt-lh-2) var(--bt-font); letter-spacing: var(--bt-ls-2); }
+.bt-body-s { font: var(--bt-fw-regular) var(--bt-fs-1)/var(--bt-lh-1) var(--bt-font); letter-spacing: var(--bt-ls-4); }
+
+/* Overline / caption */
+.bt-overline { font: var(--bt-fw-regular) var(--bt-fs-1)/var(--bt-lh-1) var(--bt-font); letter-spacing: var(--bt-ls-4); text-transform: none; }
+
+/* Convenience legacy aliases so ad-hoc elements pick up something sensible */
+h1 { font: var(--bt-fw-bold) var(--bt-fs-8)/var(--bt-lh-8) var(--bt-font); margin: 0 0 var(--bt-space-3); }
+h2 { font: var(--bt-fw-bold) var(--bt-fs-7)/var(--bt-lh-7) var(--bt-font); margin: 0 0 var(--bt-space-2); }
+h3 { font: var(--bt-fw-bold) var(--bt-fs-6)/var(--bt-lh-6) var(--bt-font); margin: 0 0 var(--bt-space-2); }
+h4 { font: var(--bt-fw-bold) var(--bt-fs-5)/var(--bt-lh-5) var(--bt-font); margin: 0 0 var(--bt-space-1); }
+p  { font: var(--bt-fw-regular) var(--bt-fs-3)/var(--bt-lh-3) var(--bt-font); letter-spacing: var(--bt-ls-2); margin: 0 0 var(--bt-space-2); }
+a  { color: var(--bt-bowtie-pink); text-decoration: none; }
+a:hover { color: var(--bt-dragon-fruit); text-decoration: underline; }

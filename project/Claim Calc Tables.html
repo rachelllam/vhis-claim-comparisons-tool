@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Bowtie · Claim Calculation Table — A vs B</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="colors_and_type.css" />
+<style>
+  body { background: var(--bt-pebble); margin: 0; color: var(--bt-ink); }
+
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 28px 80px; }
+
+  .page-head { margin-bottom: 8px; }
+  .page-title { font: 700 28px/1.2 var(--bt-font); color: var(--bt-bowtie-blue); margin: 0 0 6px; letter-spacing: -0.01em; }
+  .page-sub { font: 400 14px/1.5 var(--bt-font); color: var(--bt-graphite); margin: 0; max-width: 640px; }
+
+  .scenario-pick { display: flex; gap: 8px; margin: 26px 0 30px; flex-wrap: wrap; }
+  .scenario-pick button {
+    border: 1px solid var(--bt-stone); background: var(--bt-white); color: var(--bt-graphite);
+    font: 600 13px/1 var(--bt-font); padding: 10px 16px; border-radius: var(--bt-radius-pill); cursor: pointer;
+    transition: all var(--bt-duration-fast) var(--bt-ease);
+  }
+  .scenario-pick button:hover { border-color: var(--bt-bowtie-pink); color: var(--bt-bowtie-pink); }
+  .scenario-pick button.on { background: var(--bt-bowtie-blue); border-color: var(--bt-bowtie-blue); color: var(--bt-white); }
+
+  .case-banner {
+    display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+    background: var(--bt-white); border: 1px solid var(--bt-stone); border-radius: var(--bt-radius-m);
+    padding: 16px 22px; margin-bottom: 26px;
+  }
+  .case-banner .lbl { font: 600 11px/1 var(--bt-font); color: var(--bt-graphite); letter-spacing: 0.06em; text-transform: uppercase; }
+  .case-banner .proc { font: 700 18px/1.2 var(--bt-font); color: var(--bt-ink); }
+  .case-banner .amt { font: 700 24px/1 var(--bt-font); color: var(--bt-bowtie-blue); margin-left: auto; }
+
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+  @media (max-width: 880px) { .cols { grid-template-columns: 1fr; } }
+
+  .col-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .col-tag { font: 700 12px/1 var(--bt-font); color: var(--bt-white); background: var(--bt-bowtie-pink); padding: 6px 11px; border-radius: var(--bt-radius-pill); letter-spacing: 0.02em; }
+  .col-tag.b { background: var(--bt-smurf); }
+  .col-name { font: 700 16px/1.2 var(--bt-font); color: var(--bt-ink); }
+  .col-desc { font: 400 12px/1.4 var(--bt-font); color: var(--bt-graphite); margin: -6px 0 16px; }
+
+  /* — Plan card shell — */
+  .pcard { background: var(--bt-white); border: 1px solid var(--bt-stone); border-radius: var(--bt-radius-m); padding: 18px 20px 20px; margin-bottom: 16px; box-shadow: var(--bt-shadow-1); }
+  .pcard-head { display: flex; align-items: center; gap: 9px; margin-bottom: 4px; }
+  .pcard-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .pcard-title { font: 700 15px/1.2 var(--bt-font); color: var(--bt-ink); }
+  .pcard-meta { font: 500 11px/1.3 var(--bt-font); color: var(--bt-graphite); margin: 0 0 14px 18px; }
+  .pcard-meta b { color: var(--bt-ink); font-weight: 700; }
+
+  /* ============ DESIGN A — receipt / ledger ============ */
+  .recpt { font-variant-numeric: tabular-nums; }
+  .recpt-row { display: flex; align-items: baseline; justify-content: space-between; padding: 9px 0; gap: 16px; }
+  .recpt-row + .recpt-row { border-top: 1px dashed var(--bt-stone); }
+  .recpt-label { font: 500 13px/1.4 var(--bt-font); color: var(--bt-graphite); }
+  .recpt-label .hint { display: block; font: 400 11px/1.2 var(--bt-font); color: var(--bt-rock); margin-top: 2px; }
+  .recpt-val { font: 600 14px/1 var(--bt-font); color: var(--bt-ink); white-space: nowrap; }
+  .recpt-val.neg { color: var(--bt-hotel-california); }
+  .recpt-val.pos { color: var(--bt-green-day); }
+  .recpt-total {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    margin-top: 8px; padding: 14px 16px; border-radius: var(--bt-radius-s);
+    background: var(--bt-green-day-light); border: 1px solid var(--bt-green-day);
+  }
+  .recpt-total.zero { background: var(--bt-hotel-california-light); border-color: var(--bt-hotel-california); }
+  .recpt-total-label { font: 700 12px/1.2 var(--bt-font); color: var(--bt-ink); letter-spacing: 0.02em; }
+  .recpt-total-label .sub { display:block; font: 400 11px/1.2 var(--bt-font); color: var(--bt-graphite); margin-top: 2px; }
+  .recpt-total-val { font: 700 24px/1 var(--bt-font); color: var(--bt-green-day); white-space: nowrap; }
+  .recpt-youpay { display:flex; justify-content: space-between; gap: 12px; margin-top: 10px; padding: 0 2px; }
+  .recpt-youpay .l { font: 500 12px/1 var(--bt-font); color: var(--bt-graphite); }
+  .recpt-youpay .v { font: 700 13px/1 var(--bt-font); color: var(--bt-hotel-california); font-variant-numeric: tabular-nums; }
+  .recpt-youpay .v.ok { color: var(--bt-green-day); }
+
+  /* ============ DESIGN B — running-balance bridge ============ */
+  .bridge { font-variant-numeric: tabular-nums; }
+  .bridge-grid { display: grid; grid-template-columns: 1fr auto auto; column-gap: 18px; }
+  .bridge-colhead { font: 700 10px/1 var(--bt-font); color: var(--bt-graphite); letter-spacing: 0.05em; text-transform: uppercase; padding-bottom: 10px; border-bottom: 1px solid var(--bt-stone); }
+  .bridge-colhead.r { text-align: right; }
+  .bridge-cell { padding: 10px 0; display: flex; align-items: baseline; }
+  .bridge-cell.r { justify-content: flex-end; white-space: nowrap; }
+  .bridge-label { font: 500 13px/1.35 var(--bt-font); color: var(--bt-graphite); }
+  .bridge-label.start { color: var(--bt-ink); font-weight: 600; }
+  .bridge-delta { font: 600 13px/1 var(--bt-font); color: var(--bt-hotel-california); }
+  .bridge-delta.none { color: var(--bt-rock); }
+  .bridge-bal { font: 600 13px/1 var(--bt-font); color: var(--bt-ink); }
+  .bridge-row-divide > * { border-top: 1px solid var(--bt-stone); }
+  .bridge-foot > * { border-top: 2px solid var(--bt-bowtie-blue); padding-top: 13px; }
+  .bridge-foot .bridge-label { font: 700 13px/1.2 var(--bt-font); color: var(--bt-ink); }
+  .bridge-foot .bridge-bal { font: 700 20px/1 var(--bt-font); color: var(--bt-green-day); }
+  .bridge-foot .bridge-bal.zero { color: var(--bt-hotel-california); }
+
+  .legend { display:flex; gap: 18px; margin: 4px 0 20px; flex-wrap: wrap; }
+  .legend span { display:flex; align-items:center; gap: 7px; font: 500 12px/1 var(--bt-font); color: var(--bt-graphite); }
+  .legend i { width: 13px; height: 13px; border-radius: 3px; display:inline-block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="page-head">
+    <h1 class="page-title">Coverage calculation — two table styles</h1>
+    <p class="page-sub">Same numbers, two ways to show the math under each plan. Pick a scenario to see how each handles a clean bill, a deductible, and a benefit-cap clip.</p>
+  </div>
+
+  <div class="scenario-pick" id="scenarioPick"></div>
+
+  <div class="case-banner">
+    <span class="lbl">Procedure</span>
+    <span class="proc" id="caseProc">Heart valve repair</span>
+    <span class="lbl">Eligible medical charge</span>
+    <span class="amt" id="caseAmt">HK$350,000</span>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:var(--bt-hotel-california)"></i>You pay / not covered</span>
+    <span><i style="background:var(--bt-green-day)"></i>VHIS reimburses</span>
+  </div>
+
+  <div class="cols">
+    <div>
+      <div class="col-head"><span class="col-tag">A</span><span class="col-name">Receipt / ledger</span></div>
+      <p class="col-desc">Reads top-to-bottom like a hospital bill. Signed deductions, one bold net payout.</p>
+      <div id="colA"></div>
+    </div>
+    <div>
+      <div class="col-head"><span class="col-tag b">B</span><span class="col-name">Running-balance bridge</span></div>
+      <p class="col-desc">Adds a third column — the covered balance ticks down line by line to the payout.</p>
+      <div id="colB"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const fmt = (n) => 'HK$' + Math.round(n).toLocaleString('en-US');
+const fmtSigned = (n) => (n > 0 ? '−' : '') + 'HK$' + Math.round(n).toLocaleString('en-US');
+
+// Case: heart valve repair, HK$350,000 eligible charge
+const CHARGE = 350000;
+const PLANS = [
+  { id:'flexi', name:'Flexi Superior',     color:'var(--bt-bowtie-blue)', deductible:0,     cap:Infinity, capLabel:'No per-surgery cap' },
+  { id:'pink',  name:'Pink (Semi-private)', color:'var(--bt-bowtie-pink)', deductible:50000, cap:600000,   capLabel:'Cap HK$600K' },
+  { id:'std',   name:'VHIS Standard',       color:'var(--bt-graphite)',    deductible:0,     cap:50000,    capLabel:'Cap HK$50K' },
+];
+
+const SCENARIOS = [
+  { id:'all',     label:'All three plans' },
+  { id:'flexi',   label:'Fully covered (no deductible)' },
+  { id:'pink',    label:'Deductible applied' },
+  { id:'std',     label:'Clipped by benefit cap' },
+];
+let current = 'all';
+
+function calc(p) {
+  const afterDed = Math.max(0, CHARGE - p.deductible);
+  const payout = Math.min(afterDed, p.cap);
+  const overCap = afterDed - payout;            // not covered, above cap
+  const youPay = p.deductible + overCap;
+  return { afterDed, payout, overCap, youPay };
+}
+
+// ---------- Design A : receipt ----------
+function renderA(p) {
+  const c = calc(p);
+  const zero = c.payout === 0;
+  let rows = '';
+  rows += `<div class="recpt-row"><span class="recpt-label">Eligible medical charge</span><span class="recpt-val">${fmt(CHARGE)}</span></div>`;
+  if (p.deductible > 0)
+    rows += `<div class="recpt-row"><span class="recpt-label">Deductible<span class="hint">You pay this first</span></span><span class="recpt-val neg">${fmtSigned(p.deductible)}</span></div>`;
+  if (c.overCap > 0)
+    rows += `<div class="recpt-row"><span class="recpt-label">Above plan limit<span class="hint">${p.capLabel} per surgery</span></span><span class="recpt-val neg">${fmtSigned(c.overCap)}</span></div>`;
+  rows += `<div class="recpt-row"><span class="recpt-label">VHIS covers</span><span class="recpt-val pos">${fmt(c.payout)}</span></div>`;
+
+  const youPayLine = c.youPay > 0
+    ? `<div class="recpt-youpay"><span class="l">You pay in total</span><span class="v">${fmt(c.youPay)}</span></div>`
+    : `<div class="recpt-youpay"><span class="l">You pay in total</span><span class="v ok">HK$0 · fully covered</span></div>`;
+
+  return `<div class="pcard">
+    <div class="pcard-head"><span class="pcard-dot" style="background:${p.color}"></span><span class="pcard-title">${p.name}</span></div>
+    <div class="pcard-meta">Deductible · <b>${p.deductible===0?'None':fmt(p.deductible)}</b> &nbsp;·&nbsp; ${p.capLabel}</div>
+    <div class="recpt">${rows}
+      <div class="recpt-total ${zero?'zero':''}">
+        <span class="recpt-total-label">Net payout<span class="sub">VHIS pays the hospital / you</span></span>
+        <span class="recpt-total-val" style="${zero?'color:var(--bt-hotel-california)':''}">${fmt(c.payout)}</span>
+      </div>
+      ${youPayLine}
+    </div>
+  </div>`;
+}
+
+// ---------- Design B : running-balance bridge ----------
+function renderB(p) {
+  const c = calc(p);
+  const zero = c.payout === 0;
+  let lines = '';
+  // header
+  lines += `<div class="bridge-colhead">Item</div><div class="bridge-colhead r">Adjustment</div><div class="bridge-colhead r">Covered balance</div>`;
+  // start
+  lines += `<div class="bridge-cell"><span class="bridge-label start">Eligible medical charge</span></div>
+            <div class="bridge-cell r"><span class="bridge-delta none">—</span></div>
+            <div class="bridge-cell r"><span class="bridge-bal">${fmt(CHARGE)}</span></div>`;
+  // deductible
+  if (p.deductible > 0)
+    lines += `<div class="bridge-cell"><span class="bridge-label">Deductible — you pay first</span></div>
+              <div class="bridge-cell r"><span class="bridge-delta">${fmtSigned(p.deductible)}</span></div>
+              <div class="bridge-cell r"><span class="bridge-bal">${fmt(c.afterDed)}</span></div>`;
+  // over cap
+  if (c.overCap > 0)
+    lines += `<div class="bridge-cell"><span class="bridge-label">Above plan limit (${p.capLabel})</span></div>
+              <div class="bridge-cell r"><span class="bridge-delta">${fmtSigned(c.overCap)}</span></div>
+              <div class="bridge-cell r"><span class="bridge-bal">${fmt(c.payout)}</span></div>`;
+  // foot
+  lines += `<div class="bridge-cell bridge-foot"><span class="bridge-label">VHIS net payout</span></div>
+            <div class="bridge-cell r bridge-foot"><span class="bridge-delta none">—</span></div>
+            <div class="bridge-cell r bridge-foot"><span class="bridge-bal ${zero?'zero':''}">${fmt(c.payout)}</span></div>`;
+
+  return `<div class="pcard">
+    <div class="pcard-head"><span class="pcard-dot" style="background:${p.color}"></span><span class="pcard-title">${p.name}</span></div>
+    <div class="pcard-meta">Deductible · <b>${p.deductible===0?'None':fmt(p.deductible)}</b> &nbsp;·&nbsp; ${p.capLabel}</div>
+    <div class="bridge"><div class="bridge-grid">${lines}</div></div>
+  </div>`;
+}
+
+function activePlans() {
+  if (current === 'all') return PLANS;
+  return PLANS.filter(p => p.id === current);
+}
+
+function render() {
+  const plans = activePlans();
+  document.getElementById('colA').innerHTML = plans.map(renderA).join('');
+  document.getElementById('colB').innerHTML = plans.map(renderB).join('');
+  document.querySelectorAll('#scenarioPick button').forEach(b => b.classList.toggle('on', b.dataset.id === current));
+}
+
+const pick = document.getElementById('scenarioPick');
+pick.innerHTML = SCENARIOS.map(s => `<button data-id="${s.id}">${s.label}</button>`).join('');
+pick.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; current = b.dataset.id; render(); });
+
+render();
+</script>
+</body>
+</html>

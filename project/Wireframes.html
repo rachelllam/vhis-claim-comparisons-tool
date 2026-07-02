@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Claim Comparison · Wireframes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Kalam:wght@300;400;700&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; font-family: 'Kalam', sans-serif; background: #f6f6f9; color: #1f1f24; }
+  /* Wireframe primitives */
+  .wf { font-family: 'Kalam', sans-serif; color: #2a2a33; }
+  .wf h1, .wf h2, .wf h3, .wf .hand { font-family: 'Caveat', cursive; font-weight: 700; letter-spacing: 0.5px; }
+  .wf .step-label { font-family: 'Caveat', cursive; font-size: 22px; color: #6b6b76; letter-spacing: 1px; text-transform: uppercase; }
+  .wf .box { border: 2px solid #2a2a33; border-radius: 14px; background: #fff; }
+  .wf .box.dashed { border-style: dashed; background: #fafafd; }
+  .wf .box.soft { background: #fafafd; }
+  .wf .pill { display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid #2a2a33; border-radius: 999px; padding: 4px 14px; font-size: 16px; background: #fff; font-family: 'Kalam', sans-serif; }
+  .wf .pill.on { background: #ffe1ee; border-color: #ff0068; color: #ff0068; }
+  .wf .pill.blue-on { background: #e6f0ff; border-color: #191357; color: #191357; }
+  .wf .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .wf .dot.g { background: #18a957; }
+  .wf .dot.b { background: #2c6bd6; }
+  .wf .dot.o { background: #d97706; }
+  .wf .dot.r { background: #d94840; }
+  .wf .placeholder { color: #8a8a96; }
+  .wf .x-line { background: repeating-linear-gradient(90deg, #2a2a33 0 4px, transparent 4px 8px); height: 2px; }
+  .wf .squiggle { font-family: 'Caveat', cursive; color: #8a8a96; }
+  .wf .tag { font-family: 'Kalam', sans-serif; font-size: 13px; background: #ececf2; border-radius: 999px; padding: 2px 9px; display: inline-block; }
+  .wf button.fake { font-family: 'Caveat', cursive; font-size: 22px; border: 2px solid #2a2a33; background: #fff; padding: 6px 18px; border-radius: 999px; cursor: default; }
+  .wf button.fake.primary { background: #ff0068; color: #fff; border-color: #ff0068; }
+  .wf .arrow { font-family: 'Caveat', cursive; color: #ff0068; font-size: 28px; line-height: 1; }
+  .wf .note { font-family: 'Caveat', cursive; color: #ff0068; }
+  .wf .label-small { font-size: 14px; color: #6b6b76; }
+</style>
+</head>
+<body>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="wireframe-a.jsx"></script>
+<script type="text/babel" src="wireframe-b.jsx"></script>
+<script type="text/babel" src="wireframe-c.jsx"></script>
+
+<div id="root"></div>
+
+<script type="text/babel">
+  const { DesignCanvas, DCSection, DCArtboard } = window;
+  const App = () => (
+    <DesignCanvas
+      title="Claim Comparison — Wireframes"
+      subtitle="3 layout directions for the phone-consultation widget. Click any artboard to focus."
+    >
+      <DCSection id="layouts" title="Layout directions">
+        <DCArtboard id="A" label="A · Linear wizard" width={1200} height={820}>
+          <WireframeA />
+        </DCArtboard>
+        <DCArtboard id="B" label="B · Cockpit (3-column)" width={1400} height={820}>
+          <WireframeB />
+        </DCArtboard>
+        <DCArtboard id="C" label="C · Comparison-first" width={1400} height={820}>
+          <WireframeC />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body>
+</html>
