@@ -1,8 +1,9 @@
 // Right panel — WhatsApp message composer, adapts to "By case" / "By plan".
 import { useState, useMemo, useEffect } from 'react';
 import type { CSSProperties } from 'react';
-import { SURGERY_TIERS, VHIS_PLANS, CASES, computeBreakdown, fmtHK, fmtHKShort, tierIndex } from '../data';
+import { SURGERY_TIERS, VHIS_PLANS, computeBreakdown, fmtHK, fmtHKShort, tierIndex } from '../data';
 import type { SurgeryCase, VhisPlan, Ward } from '../data';
+import { useOperationData } from '../useOperationData';
 import type { SelectedPlan, CoverageView } from '../types';
 
 const ccMsgStylesV2 = {
@@ -82,6 +83,7 @@ function buildByPlan({ focus, focusDef, cases }: { focus: SelectedPlan | undefin
 }
 
 export function MessagePanel({ plans, cv, onCollapse }: { plans: SelectedPlan[]; cv: CoverageView; onCollapse?: () => void }) {
+  const { cases: allCases } = useOperationData();
   const mode = cv ? cv.mode : 'case';
 
   const msg = useMemo(() => {
@@ -89,17 +91,17 @@ export function MessagePanel({ plans, cv, onCollapse }: { plans: SelectedPlan[];
     if (mode === 'plan') {
       const focus = activePlans.find((p) => p.id === cv.focusPlanId) || activePlans[0];
       const focusDef = focus ? VHIS_PLANS.find((v) => v.id === focus.id) || null : null;
-      const cases = CASES.filter((c) => cv.selectedCaseIds.includes(c.en))
+      const cases = allCases.filter((c) => cv.selectedCaseIds.includes(c.id))
         .slice()
         .sort((a, b) => tierIndex(a.tier) - tierIndex(b.tier) || a.cost - b.cost);
       return buildByPlan({ focus, focusDef, cases });
     }
-    const chosen = CASES.filter((c) => cv.selectedCaseIds.includes(c.en))
+    const chosen = allCases.filter((c) => cv.selectedCaseIds.includes(c.id))
       .slice()
       .sort((a, b) => tierIndex(a.tier) - tierIndex(b.tier) || a.cost - b.cost);
-    const focusCase = chosen.find((c) => c.en === cv.focusCaseId) || chosen[0] || null;
+    const focusCase = chosen.find((c) => c.id === cv.focusCaseId) || chosen[0] || null;
     return buildByCase({ caseItem: focusCase, plans });
-  }, [mode, plans, cv && cv.focusPlanId, cv && cv.focusCaseId, cv && cv.selectedCaseIds]);
+  }, [allCases, mode, plans, cv && cv.focusPlanId, cv && cv.focusCaseId, cv && cv.selectedCaseIds]);
 
   const [draft, setDraft] = useState(msg);
   const [dirty, setDirty] = useState(false);

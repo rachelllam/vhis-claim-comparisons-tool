@@ -42,6 +42,6 @@ export interface CaseFilterProps {
   age: string;
   setAge: (a: string) => void;
   selectedCaseIds: string[];
-  onToggleCase: (en: string) => void;
+  onToggleCase: (id: string) => void;
   hideHeader?: boolean;
 }

@@ -1,4 +1,5 @@
 import { VHIS_PLANS, casesFromIds } from '../data';
+import { useOperationData } from '../useOperationData';
 import type { SelectedPlan, CoverageView } from '../types';
 import { ccV2 } from './chartStyles';
 
@@ -13,13 +14,14 @@ export function CoverageTabsBar({
   plans: SelectedPlan[];
   cv: CoverageView;
   onRemove: (id: string) => void;
-  onRemoveCase: (en: string) => void;
+  onRemoveCase: (id: string) => void;
 }) {
+  const { cases } = useOperationData();
   const mode = cv.mode;
   const setMode = cv.setMode;
   const activePlans = plans.filter(Boolean);
-  const chosenCases = casesFromIds(cv.selectedCaseIds);
-  const resolvedCaseId = (chosenCases.find((c) => c.en === cv.focusCaseId) || chosenCases[0] || ({} as { en?: string })).en;
+  const chosenCases = casesFromIds(cases, cv.selectedCaseIds);
+  const resolvedCaseId = (chosenCases.find((c) => c.id === cv.focusCaseId) || chosenCases[0] || ({} as { id?: string })).id;
   const resolvedPlanId = (activePlans.find((p) => p.id === cv.focusPlanId) || activePlans[0] || ({} as { id?: string })).id;
   const caseIcon = (
     <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="var(--bt-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -78,13 +80,13 @@ export function CoverageTabsBar({
         ) : (
           chosenCases.map((c) => (
             <TabBtn
-              key={c.en}
+              key={c.id}
               favColor="var(--bt-bowtie-pink)"
               icon={caseIcon}
               label={c.simple || c.en}
-              on={mode === 'case' && c.en === resolvedCaseId}
-              onClick={() => { setMode('case'); cv.setFocusCaseId(c.en); }}
-              onClose={() => onRemoveCase(c.en)}
+              on={mode === 'case' && c.id === resolvedCaseId}
+              onClick={() => { setMode('case'); cv.setFocusCaseId(c.id); }}
+              onClose={() => onRemoveCase(c.id)}
             />
           ))
         )}

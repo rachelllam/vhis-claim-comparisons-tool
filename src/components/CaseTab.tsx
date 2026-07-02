@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import type { CSSProperties } from 'react';
-import { SURGERY_TIERS, CASES, fmtHK } from '../data';
+import { SURGERY_TIERS, fmtHK } from '../data';
 import type { TierId } from '../data';
+import { useOperationData } from '../useOperationData';
 import type { CaseFilterProps } from '../types';
 
 // Surgery tier card styles (ported from cc-input-panel.jsx ccInputStyles).
@@ -128,11 +129,12 @@ function CCCaseListMulti({
   gender: string;
   age: string;
   selectedIds: string[];
-  onToggle: (en: string) => void;
+  onToggle: (id: string) => void;
 }) {
+  const { cases } = useOperationData();
   const filtered = useMemo(
     () =>
-      CASES.filter((c) => {
+      cases.filter((c) => {
         if (c.tier !== tier) return false;
         if (gender !== 'all' && c.gender !== 'all' && c.gender !== gender) return false;
         if (age !== 'all' && c.age !== 'all') {
@@ -141,7 +143,7 @@ function CCCaseListMulti({
         }
         return true;
       }),
-    [tier, gender, age],
+    [cases, tier, gender, age],
   );
 
   const genderLabel = (g: string) => (g === 'male' ? 'Male' : g === 'female' ? 'Female' : 'Any');
@@ -155,12 +157,12 @@ function CCCaseListMulti({
         </div>
       )}
       {filtered.map((c) => {
-        const on = selectedIds.includes(c.en);
+        const on = selectedIds.includes(c.id);
         return (
           <button
-            key={c.en}
+            key={c.id}
             style={ccCaseV2.card(on)}
-            onClick={() => onToggle(c.en)}
+            onClick={() => onToggle(c.id)}
             title={on ? 'Remove from comparison' : 'Add to comparison'}
           >
             <div style={ccCaseV2.head}>
@@ -194,8 +196,9 @@ function CCCaseListMulti({
 
 export function CaseTab(props: CaseFilterProps) {
   const { tier, setTier, gender, setGender, age, setAge, selectedCaseIds, onToggleCase, hideHeader } = props;
-  const inTier = selectedCaseIds.filter((en) => {
-    const c = CASES.find((x) => x.en === en);
+  const { cases } = useOperationData();
+  const inTier = selectedCaseIds.filter((id) => {
+    const c = cases.find((x) => x.id === id);
     return c && c.tier === tier;
   }).length;
 

@@ -10,6 +10,7 @@ import {
   fmtHKShort,
 } from '../data';
 import type { SurgeryCase, SurgeryTier, VhisPlan, Ward } from '../data';
+import { useOperationData } from '../useOperationData';
 import type { SelectedPlan, CoverageView, QuoteCtx } from '../types';
 import { monthlyPremium } from '../quote';
 import { ccChartStyles, ccV2, ccDetail } from './chartStyles';
@@ -167,7 +168,8 @@ function PlanHeader({ plan, deductible, onRemove }: { plan: VhisPlan; deductible
 }
 
 function CaseHeader({ tier, caseItem, onOpenDetail }: { tier?: SurgeryTier; caseItem: SurgeryCase; onOpenDetail?: () => void }) {
-  const detail = getTreatmentDetail(caseItem.en);
+  const { treatmentDetails } = useOperationData();
+  const detail = getTreatmentDetail(treatmentDetails, caseItem.id);
   return (
     <div>
       <span style={ccV2.tierBadge()}>
@@ -202,8 +204,9 @@ function CaseHeader({ tier, caseItem, onOpenDetail }: { tier?: SurgeryTier; case
 
 // ── Enhanced treatment header (by-case mode): identity + key public stats + internal trigger ──
 function TreatmentHeader({ focusCase, onOpenDetail }: { focusCase: SurgeryCase; onOpenDetail: () => void }) {
+  const { treatmentDetails } = useOperationData();
   const tier = SURGERY_TIERS.find((t) => t.id === focusCase.tier);
-  const detail = getTreatmentDetail(focusCase.en);
+  const detail = getTreatmentDetail(treatmentDetails, focusCase.id);
   const dayCase = focusCase.days === 0;
   return (
     <div style={{ marginBottom: 18, paddingBottom: 18, borderBottom: '1px solid var(--bt-stone)' }}>
@@ -297,11 +300,12 @@ export function ChartPanel({
   cv: CoverageView;
   quoteCtx: QuoteCtx;
 }) {
+  const { cases } = useOperationData();
   const mode = cv.mode;
   const showPrem = quoteCtx && quoteCtx.show;
   const premOf = (id: string) => (showPrem ? monthlyPremium(id, quoteCtx.profile) : null);
   const activePlans = plans.filter(Boolean);
-  const chosenCases = casesFromIds(cv.selectedCaseIds);
+  const chosenCases = casesFromIds(cases, cv.selectedCaseIds);
   const [detailCase, setDetailCase] = useState<SurgeryCase | null>(null);
   const modal = detailCase && <InternalDetailModal caseItem={detailCase} onClose={() => setDetailCase(null)} />;
 
@@ -318,7 +322,7 @@ export function ChartPanel({
 
   /* ── BY CASE: one case (chip-picked) × all plans ── */
   if (mode === 'case') {
-    const focusCase = chosenCases.find((c) => c.en === cv.focusCaseId) || chosenCases[0];
+    const focusCase = chosenCases.find((c) => c.id === cv.focusCaseId) || chosenCases[0];
     if (!focusCase) {
       return (
         <div>
@@ -398,7 +402,7 @@ export function ChartPanel({
             const tier = SURGERY_TIERS.find((t) => t.id === c.tier);
             return (
               <ResultCardV2
-                key={c.en}
+                key={c.id}
                 plan={focusDef}
                 totalCost={c.cost}
                 deductible={focus.deductible}

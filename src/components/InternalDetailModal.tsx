@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { getTreatmentDetail } from '../data';
 import type { SurgeryCase } from '../data';
+import { useOperationData } from '../useOperationData';
 import { ccDetail } from './chartStyles';
 
 // Lock glyph for the internal-only marker.
@@ -14,7 +15,8 @@ export const LockIcon = ({ size = 12 }: { size?: number }) => (
 
 // ── Internal-only treatment detail drawer (right-side overlay) ──
 export function InternalDetailModal({ caseItem, onClose }: { caseItem: SurgeryCase; onClose: () => void }) {
-  const detail = getTreatmentDetail(caseItem.en);
+  const { treatmentDetails } = useOperationData();
+  const detail = getTreatmentDetail(treatmentDetails, caseItem.id);
   const [shown, setShown] = useState(false);
   useEffect(() => {
     const id = setTimeout(() => setShown(true), 20);

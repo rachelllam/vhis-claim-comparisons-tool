@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { repCaseIdsByTier } from './data';
 import type { TierId } from './data';
+import { useOperationData, useOperationDataLoader, OperationDataProvider } from './useOperationData';
 import type { Profile, SelectedPlan, CoverageMode, CoverageView, QuoteCtx, CaseFilterProps } from './types';
 import { ProfileForm } from './components/ProfileForm';
 import { CaseTab } from './components/CaseTab';
@@ -155,8 +156,10 @@ function CCTopBar({ onClearAll, showQuotes, setShowQuotes }: { onClearAll: () =>
   );
 }
 
-/* ── App ────────────────────────────────────────────────────────── */
-export function App() {
+/* ── Coverage app (mounts only after operation data has loaded) ──── */
+function CoverageApp() {
+  const { cases } = useOperationData();
+
   // Case filters (these filter which surgeries show)
   const [tier, setTier] = useState<TierId>('complex');
   const [gender, setGender] = useState('all');
@@ -172,9 +175,9 @@ export function App() {
     { id: 'pink-priv', deductible: 0 },
   ]);
 
-  const [selectedCaseIds, setSelectedCaseIds] = useState<string[]>(() => repCaseIdsByTier());
-  const toggleCase = (en: string) =>
-    setSelectedCaseIds((prev) => (prev.includes(en) ? prev.filter((x) => x !== en) : [...prev, en]));
+  const [selectedCaseIds, setSelectedCaseIds] = useState<string[]>(() => repCaseIdsByTier(cases));
+  const toggleCase = (id: string) =>
+    setSelectedCaseIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   const [msgState, setMsgState] = useState<MsgState>('open');
   const [coverageMode, setCoverageMode] = useState<CoverageMode>('case');
@@ -260,5 +263,52 @@ export function App() {
         </div>
       </div>
     </>
+  );
+}
+
+/* ── Loading / error gates for the runtime operation-data fetch ──── */
+const gateWrap: CSSProperties = {
+  minHeight: '60vh', display: 'flex', flexDirection: 'column',
+  alignItems: 'center', justifyContent: 'center', gap: 12, padding: 40, textAlign: 'center',
+};
+
+function Loading() {
+  return (
+    <div style={gateWrap}>
+      <div className="cc-spinner" aria-hidden="true" />
+      <div style={{ font: '500 13px/1.5 var(--bt-font)', color: 'var(--bt-graphite)' }}>Loading operation data…</div>
+    </div>
+  );
+}
+
+function LoadError({ error, onRetry }: { error: Error; onRetry: () => void }) {
+  return (
+    <div style={gateWrap} role="alert">
+      <div style={{ font: '700 16px/1.3 var(--bt-font)', color: 'var(--bt-ink)' }}>Couldn’t load operation data</div>
+      <div style={{ font: '400 13px/1.5 var(--bt-font)', color: 'var(--bt-graphite)', maxWidth: 420 }}>
+        {error.message}. Check that you can reach the operation-data endpoint, then try again.
+      </div>
+      <button
+        onClick={onRetry}
+        style={{
+          marginTop: 4, background: 'var(--bt-bowtie-pink)', border: 0, borderRadius: 'var(--bt-radius-pill)',
+          padding: '10px 22px', font: '700 13px/1 var(--bt-font)', color: 'var(--bt-white)', cursor: 'pointer',
+        }}
+      >
+        Retry
+      </button>
+    </div>
+  );
+}
+
+/* ── App: fetch operation data, then mount the tool ──────────────── */
+export function App() {
+  const { data, error, retry } = useOperationDataLoader();
+  if (error) return <LoadError error={error} onRetry={retry} />;
+  if (!data) return <Loading />;
+  return (
+    <OperationDataProvider value={data}>
+      <CoverageApp />
+    </OperationDataProvider>
   );
 }
