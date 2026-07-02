@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { getTreatmentDetail } from '../data';
 import type { SurgeryCase } from '../data';
 import { useOperationData } from '../useOperationData';
+import { useLang, pick, pickCaseShort } from '../i18n';
 import { ccDetail } from './chartStyles';
 
 // Lock glyph for the internal-only marker.
@@ -16,6 +17,7 @@ export const LockIcon = ({ size = 12 }: { size?: number }) => (
 // ── Internal-only treatment detail drawer (right-side overlay) ──
 export function InternalDetailModal({ caseItem, onClose }: { caseItem: SurgeryCase; onClose: () => void }) {
   const { treatmentDetails } = useOperationData();
+  const { t, lang } = useLang();
   const detail = getTreatmentDetail(treatmentDetails, caseItem.id);
   const [shown, setShown] = useState(false);
   useEffect(() => {
@@ -31,8 +33,8 @@ export function InternalDetailModal({ caseItem, onClose }: { caseItem: SurgeryCa
   }, [onClose]);
   if (!detail) return null;
 
-  const genderLabel = caseItem.gender === 'all' ? 'All genders' : caseItem.gender === 'male' ? 'Male' : 'Female';
-  const ageLabel = caseItem.age === 'all' ? 'All ages' : caseItem.age;
+  const genderLabel = caseItem.gender === 'all' ? t('common.allGenders') : caseItem.gender === 'male' ? t('common.male') : t('common.female');
+  const ageLabel = caseItem.age === 'all' ? t('common.allAges') : caseItem.age;
 
   const Part = ({ n, title, children }: { n: string; title: string; children: ReactNode }) => (
     <div style={ccDetail.part}>
@@ -49,18 +51,18 @@ export function InternalDetailModal({ caseItem, onClose }: { caseItem: SurgeryCa
       <div style={ccDetail.sheet(shown)} onClick={(e) => e.stopPropagation()}>
         <div style={ccDetail.sheetHead}>
           <span style={ccDetail.intTag}>
-            <LockIcon size={11} />Internal only · not shown to customers
+            <LockIcon size={11} />{t('modal.internalOnly')}
           </span>
           <div style={ccDetail.sheetTitleRow}>
             <div style={{ minWidth: 0 }}>
-              <h2 style={ccDetail.sheetTitle}>{caseItem.simple || caseItem.en}</h2>
-              <div style={ccDetail.sheetOfficial}>{detail.official}</div>
+              <h2 style={ccDetail.sheetTitle}>{pickCaseShort(caseItem, lang)}</h2>
+              <div style={ccDetail.sheetOfficial}>{pick(detail.official, lang)}</div>
             </div>
             <button
               style={ccDetail.sheetClose}
               onClick={onClose}
-              title="Close"
-              aria-label="Close"
+              title={t('modal.close')}
+              aria-label={t('modal.close')}
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--bt-bowtie-pink)'; e.currentTarget.style.color = 'var(--bt-bowtie-pink)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--bt-stone)'; e.currentTarget.style.color = 'var(--bt-graphite)'; }}
             >
@@ -72,44 +74,44 @@ export function InternalDetailModal({ caseItem, onClose }: { caseItem: SurgeryCa
         </div>
 
         <div style={ccDetail.sheetBody}>
-          <Part n="1" title="Who gets this">
+          <Part n="1" title={t('modal.whoGetsThis')}>
             <div style={ccDetail.demoChips}>
               <span style={ccDetail.demoChip}>
-                <span style={ccDetail.demoChipKey}>Age group</span>
+                <span style={ccDetail.demoChipKey}>{t('modal.ageGroup')}</span>
                 {ageLabel}
               </span>
               <span style={ccDetail.demoChip}>
-                <span style={ccDetail.demoChipKey}>Gender</span>
+                <span style={ccDetail.demoChipKey}>{t('modal.gender')}</span>
                 {genderLabel}
               </span>
             </div>
-            <p style={ccDetail.para}>{detail.demographics}</p>
+            <p style={ccDetail.para}>{pick(detail.demographics, lang)}</p>
           </Part>
 
-          <Part n="2" title="About the operation">
+          <Part n="2" title={t('modal.aboutOperation')}>
             <div style={ccDetail.opGrid}>
               <div style={ccDetail.opBlock}>
-                <div style={ccDetail.opKey}>Operation purpose</div>
-                <p style={ccDetail.opVal}>{detail.purpose}</p>
+                <div style={ccDetail.opKey}>{t('modal.operationPurpose')}</div>
+                <p style={ccDetail.opVal}>{pick(detail.purpose, lang)}</p>
               </div>
               <div style={ccDetail.opBlock}>
-                <div style={ccDetail.opKey}>Operation introduction</div>
-                <p style={ccDetail.opVal}>{detail.introduction}</p>
+                <div style={ccDetail.opKey}>{t('modal.operationIntro')}</div>
+                <p style={ccDetail.opVal}>{pick(detail.introduction, lang)}</p>
               </div>
               <div style={ccDetail.opBlock}>
-                <div style={ccDetail.opKey}>Estimated operation time</div>
-                <p style={ccDetail.opVal}>{detail.opTime}</p>
+                <div style={ccDetail.opKey}>{t('modal.estOperationTime')}</div>
+                <p style={ccDetail.opVal}>{pick(detail.opTime, lang)}</p>
               </div>
             </div>
           </Part>
 
-          <Part n="3" title="Private hospital charge reference">
+          <Part n="3" title={t('modal.chargeReference')}>
             <div style={ccDetail.hospList}>
               {detail.hospitals.map((h, i) => (
                 <div key={i} style={ccDetail.hospCard}>
                   <div style={ccDetail.hospTop}>
                     <div style={{ minWidth: 0 }}>
-                      <div style={ccDetail.hospName}>{h.name}</div>
+                      <div style={ccDetail.hospName}>{pick(h.name, lang)}</div>
                       <div style={ccDetail.hospUpdated}>{h.updated}</div>
                     </div>
                     {h.inRider ? (
@@ -117,23 +119,23 @@ export function InternalDetailModal({ caseItem, onClose }: { caseItem: SurgeryCa
                         <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M2 5l2 2 4-5"></path>
                         </svg>
-                        In rider
+                        {t('modal.inRider')}
                       </span>
                     ) : (
-                      <span style={ccDetail.riderNo}>Not in rider</span>
+                      <span style={ccDetail.riderNo}>{t('modal.notInRider')}</span>
                     )}
                   </div>
                   <div style={ccDetail.hospRows}>
                     <div style={ccDetail.hospRow}>
-                      <span style={ccDetail.hospKey}>Official name</span>
-                      <span style={ccDetail.hospVal}>{h.official}</span>
+                      <span style={ccDetail.hospKey}>{t('modal.officialName')}</span>
+                      <span style={ccDetail.hospVal}>{pick(h.official, lang)}</span>
                     </div>
                     <div style={ccDetail.hospRow}>
-                      <span style={ccDetail.hospKey}>Day case / inpatient</span>
+                      <span style={ccDetail.hospKey}>{t('modal.dayCaseInpatient')}</span>
                       <span style={ccDetail.hospVal}>{h.setting}</span>
                     </div>
                     <div style={ccDetail.hospRow}>
-                      <span style={ccDetail.hospKey}>Price (range)</span>
+                      <span style={ccDetail.hospKey}>{t('modal.priceRange')}</span>
                       <span style={ccDetail.hospValPrice}>{h.priceRange}</span>
                     </div>
                   </div>

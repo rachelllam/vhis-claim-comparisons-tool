@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import { SURGERY_TIERS, fmtHK } from '../data';
 import type { TierId } from '../data';
 import { useOperationData } from '../useOperationData';
+import { useLang, pick, pickCaseName } from '../i18n';
 import type { CaseFilterProps } from '../types';
 
 // Surgery tier card styles (ported from cc-input-panel.jsx ccInputStyles).
@@ -26,15 +27,16 @@ const tierStyles = {
 };
 
 export function CCSurgeryTiers({ value, onChange }: { value: TierId; onChange: (id: TierId) => void }) {
+  const { lang } = useLang();
   return (
     <div style={tierStyles.tierGrid}>
-      {SURGERY_TIERS.map((t) => (
-        <button key={t.id} style={tierStyles.tierCard(value === t.id)} onClick={() => onChange(t.id)}>
+      {SURGERY_TIERS.map((tier) => (
+        <button key={tier.id} style={tierStyles.tierCard(value === tier.id)} onClick={() => onChange(tier.id)}>
           <span style={tierStyles.tierName}>
-            <span style={tierStyles.tierDot(t.accent)}></span>
-            {t.en}
+            <span style={tierStyles.tierDot(tier.accent)}></span>
+            {pick(tier, lang)}
           </span>
-          <span style={tierStyles.tierRange}>{t.rangeLabel}</span>
+          <span style={tierStyles.tierRange}>{tier.rangeLabel}</span>
         </button>
       ))}
     </div>
@@ -52,12 +54,6 @@ const AGE_BANDS_V2 = [
   { id: 'senior',  label: '65+' },
 ];
 const AGE_BAND_MATCH_V2: Record<string, string[]> = { bb: [], toddler: [], teen: [], youth: [], middle: ['40-59'], senior: ['60+'] };
-
-const GENDER_OPTS_V2 = [
-  { id: 'all',    label: '不限 Any' },
-  { id: 'male',   label: '男 Male' },
-  { id: 'female', label: '女 Female' },
-];
 
 // Vertical column of selectable chips (one column of the 2-column picker).
 function CCChipColumn({
@@ -132,6 +128,7 @@ function CCCaseListMulti({
   onToggle: (id: string) => void;
 }) {
   const { cases } = useOperationData();
+  const { t, lang } = useLang();
   const filtered = useMemo(
     () =>
       cases.filter((c) => {
@@ -146,14 +143,14 @@ function CCCaseListMulti({
     [cases, tier, gender, age],
   );
 
-  const genderLabel = (g: string) => (g === 'male' ? 'Male' : g === 'female' ? 'Female' : 'Any');
-  const ageLabel = (a: string) => (a === 'all' ? 'Any age' : a);
+  const genderLabel = (g: string) => (g === 'male' ? t('common.male') : g === 'female' ? t('common.female') : t('common.any'));
+  const ageLabel = (a: string) => (a === 'all' ? t('common.anyAge') : a);
 
   return (
     <div className="cc-scroll" style={ccCaseV2.list}>
       {filtered.length === 0 && (
         <div style={{ padding: 24, textAlign: 'center', color: 'var(--bt-graphite)', font: '400 13px var(--bt-font)' }}>
-          No matching cases
+          {t('case.noMatching')}
         </div>
       )}
       {filtered.map((c) => {
@@ -163,10 +160,10 @@ function CCCaseListMulti({
             key={c.id}
             style={ccCaseV2.card(on)}
             onClick={() => onToggle(c.id)}
-            title={on ? 'Remove from comparison' : 'Add to comparison'}
+            title={on ? t('common.removeFromComparison') : t('common.addToComparison')}
           >
             <div style={ccCaseV2.head}>
-              <div style={ccCaseV2.title}>{c.en}</div>
+              <div style={ccCaseV2.title}>{pickCaseName(c, lang)}</div>
               <div style={ccCaseV2.right}>
                 <span style={ccCaseV2.price}>{fmtHK(c.cost)}</span>
                 <span style={ccCaseV2.check(on)}>
@@ -197,32 +194,39 @@ function CCCaseListMulti({
 export function CaseTab(props: CaseFilterProps) {
   const { tier, setTier, gender, setGender, age, setAge, selectedCaseIds, onToggleCase, hideHeader } = props;
   const { cases } = useOperationData();
+  const { t } = useLang();
   const inTier = selectedCaseIds.filter((id) => {
     const c = cases.find((x) => x.id === id);
     return c && c.tier === tier;
   }).length;
 
+  const genderOpts = [
+    { id: 'all', label: t('common.any') },
+    { id: 'male', label: t('common.male') },
+    { id: 'female', label: t('common.female') },
+  ];
+
   const labelCss: CSSProperties = { font: '700 11px/1 var(--bt-font)', color: 'var(--bt-graphite)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8 };
 
   return (
     <div>
-      {!hideHeader && <h2 className="cc-panel-h1">Case</h2>}
-      {!hideHeader && <p className="cc-panel-sub">Pick the surgery examples to compare</p>}
+      {!hideHeader && <h2 className="cc-panel-h1">{t('case.title')}</h2>}
+      {!hideHeader && <p className="cc-panel-sub">{t('case.sub')}</p>}
 
-      <div className="cc-section-label">Surgery tier</div>
+      <div className="cc-section-label">{t('case.surgeryTier')}</div>
       <CCSurgeryTiers value={tier} onChange={setTier} />
 
       <div className="cc-section-label">
-        Real examples
-        {inTier > 0 && <span className="pink"> ({inTier} in this tier)</span>}
+        {t('case.realExamples')}
+        {inTier > 0 && <span className="pink"> {t('case.inThisTierTpl').replace('{n}', String(inTier))}</span>}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 14 }}>
         <div>
-          <div style={labelCss}>Gender</div>
-          <CCChipColumn value={gender} options={GENDER_OPTS_V2} onChange={setGender} />
+          <div style={labelCss}>{t('case.gender')}</div>
+          <CCChipColumn value={gender} options={genderOpts} onChange={setGender} />
         </div>
         <div>
-          <div style={labelCss}>Age</div>
+          <div style={labelCss}>{t('case.age')}</div>
           <CCChipColumn value={age} options={AGE_BANDS_V2} onChange={setAge} />
         </div>
       </div>

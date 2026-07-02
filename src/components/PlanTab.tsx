@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import type { CSSProperties } from 'react';
 import { VHIS_PLANS } from '../data';
-import type { Ward } from '../data';
+import { useLang, pick, wardLabel } from '../i18n';
 import type { SelectedPlan, QuoteCtx } from '../types';
 import { PremiumBadge } from './common';
 
@@ -57,7 +57,6 @@ const ccPlanStyles = {
   }),
 };
 
-const WARD_LABELS: Record<Ward, string> = { standard: 'Standard ward', 'semi-private': 'Semi-private', private: 'Private' };
 const dedColLabel = (d: number) => (d === 0 ? '$0' : '$' + Math.round(d / 1000) + 'K');
 
 interface PlanPickerProps {
@@ -70,6 +69,7 @@ interface PlanPickerProps {
 }
 
 function CCPlanPicker({ selected, onAdd, onRemove, onSetDeductible, onSelectPink, quoteCtx }: PlanPickerProps) {
+  const { t, lang } = useLang();
   const showQuote = quoteCtx && quoteCtx.show;
   const listPlans = VHIS_PLANS.filter((p) => !p.id.startsWith('pink'));
   const pinkPlans = VHIS_PLANS.filter((p) => p.id.startsWith('pink'));
@@ -87,14 +87,14 @@ function CCPlanPicker({ selected, onAdd, onRemove, onSetDeductible, onSelectPink
             <div key={plan.id} style={ccPlanStyles.card(isSel, false)}>
               <div style={ccPlanStyles.cardBody}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-                  <span style={ccPlanStyles.cardName}>{plan.en}</span>
+                  <span style={ccPlanStyles.cardName}>{pick(plan, lang)}</span>
                   {showQuote && <PremiumBadge planId={plan.id} profile={quoteCtx.profile} />}
                 </div>
                 {isSel && plan.deductibles.length > 1 && (
                   <div style={ccPlanStyles.dedPills}>
                     {plan.deductibles.map((d) => (
                       <button key={d} style={ccPlanStyles.dedPill(sel!.deductible === d)} onClick={() => onSetDeductible(plan.id, d)}>
-                        {d === 0 ? 'No deduct.' : 'Deduct ' + dedColLabel(d)}
+                        {d === 0 ? t('plan.noDeduct') : t('plan.deductTpl').replace('{amount}', dedColLabel(d))}
                       </button>
                     ))}
                   </div>
@@ -102,7 +102,7 @@ function CCPlanPicker({ selected, onAdd, onRemove, onSetDeductible, onSelectPink
               </div>
               <button
                 style={ccPlanStyles.addBtn(isSel, false)}
-                title={isSel ? 'Remove' : 'Add to compare'}
+                title={isSel ? t('plan.remove') : t('plan.addShort')}
                 onClick={() => (isSel ? onRemove(plan.id) : onAdd(plan.id, plan.deductibles[0]))}
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
@@ -124,8 +124,8 @@ function CCPlanPicker({ selected, onAdd, onRemove, onSetDeductible, onSelectPink
       {/* — Pink plan matrix — */}
       <div style={ccPlanStyles.matrix}>
         <div style={ccPlanStyles.matrixHead}>
-          <span style={ccPlanStyles.matrixTitle}>Pink plan</span>
-          <span style={ccPlanStyles.matrixHint}>Tap ward × deductible to compare</span>
+          <span style={ccPlanStyles.matrixTitle}>{t('plan.pinkPlan')}</span>
+          <span style={ccPlanStyles.matrixHint}>{t('plan.pinkHint')}</span>
         </div>
         <div style={ccPlanStyles.grid(pinkDeductibles.length)}>
           <div style={ccPlanStyles.corner}></div>
@@ -139,7 +139,7 @@ function CCPlanPicker({ selected, onAdd, onRemove, onSetDeductible, onSelectPink
             return (
               <Fragment key={plan.id}>
                 <div style={{ ...ccPlanStyles.wardHead, flexDirection: 'column', alignItems: 'flex-start', gap: 3, justifyContent: 'center' }}>
-                  <span>{WARD_LABELS[plan.ward] || plan.en}</span>
+                  <span>{wardLabel(plan.ward, t)}</span>
                   {showQuote && <PremiumBadge planId={plan.id} profile={quoteCtx.profile} style={{ font: '700 11px/1 var(--bt-font)' }} />}
                 </div>
                 {pinkDeductibles.map((d) => {
@@ -148,7 +148,7 @@ function CCPlanPicker({ selected, onAdd, onRemove, onSetDeductible, onSelectPink
                     <button
                       key={plan.id + d}
                       style={ccPlanStyles.cell(!!isSel, false)}
-                      title={`${WARD_LABELS[plan.ward]} · ${dedColLabel(d)}`}
+                      title={`${wardLabel(plan.ward, t)} · ${dedColLabel(d)}`}
                       onClick={() => onSelectPink(plan.id, d)}
                     >
                       {dedColLabel(d)}
@@ -176,14 +176,15 @@ export interface PlanTabProps {
 
 export function PlanTab(props: PlanTabProps) {
   const { plans, onAdd, onRemove, onSetDeductible, onSelectPink, hideHeader, quoteCtx } = props;
+  const { t } = useLang();
   const filledCount = plans.length;
   return (
     <div>
-      {!hideHeader && <h2 className="cc-panel-h1">Configure</h2>}
-      {!hideHeader && <p className="cc-panel-sub">Add VHIS plans to compare</p>}
+      {!hideHeader && <h2 className="cc-panel-h1">{t('plan.configure')}</h2>}
+      {!hideHeader && <p className="cc-panel-sub">{t('plan.addToCompare')}</p>}
 
       <div className="cc-section-label" style={{ marginTop: 0 }}>
-        VHIS plans <span style={{ color: 'var(--bt-bowtie-pink)' }}>({filledCount} selected)</span>
+        {t('plan.vhisPlans')} <span style={{ color: 'var(--bt-bowtie-pink)' }}>{t('plan.selectedTpl').replace('{n}', String(filledCount))}</span>
       </div>
       <CCPlanPicker
         selected={plans}

@@ -36,21 +36,28 @@ export interface SurgeryCase {
   days: number;
 }
 
+// Bilingual text pair. Either side may hold the 'N/A' placeholder when the
+// endpoint provides no copy in that language — consumers resolve via pick().
+export interface Bi {
+  en: string;
+  zh: string;
+}
+
 export interface HospitalRef {
-  name: string;
-  official: string;
-  setting: string;
-  priceRange: string;
+  name: Bi;
+  official: Bi;
+  setting: string;   // lengthOfStay — free text, single-language
+  priceRange: string; // range string, single-language
   inRider: boolean;
-  updated: string;
+  updated: string;   // date, single-language
 }
 
 export interface TreatmentDetail {
-  official: string;
-  demographics: string;
-  purpose: string;
-  introduction: string;
-  opTime: string;
+  official: Bi;
+  demographics: Bi;
+  purpose: Bi;
+  introduction: Bi;
+  opTime: Bi;
   hospitals: HospitalRef[];
 }
 
@@ -128,6 +135,12 @@ export const OPERATIONS_URL =
 // English/text field → itself, or 'N/A' when empty/missing.
 const na = (s: string | null | undefined): string => (s && s.trim() ? s : 'N/A');
 
+// Bilingual text pair from the endpoint's paired `*En` / `*Zh` fields.
+const bi = (enVal: string | null | undefined, zhVal: string | null | undefined): Bi => ({
+  en: na(enVal),
+  zh: na(zhVal),
+});
+
 const TIER_IDS: string[] = ['minor', 'intermediate', 'major', 'complex'];
 // operationCategory → tier; null for 'inpatient' / '' → those records are dropped.
 function toTier(cat: string): TierId | null {
@@ -196,14 +209,14 @@ export function transformOperations(raw: OperationRecord[]): OperationData {
     });
 
     treatmentDetails[id] = {
-      official: na(op.operationEn),
-      demographics: na(op.demographicInfo?.contextEn),
-      purpose: na(op.operationPurposeEn),
-      introduction: na(op.operationDetailsEn),
-      opTime: na(op.estimatedOperationTimeRemarkEn),
+      official: bi(op.operationEn, op.operationZh),
+      demographics: bi(op.demographicInfo?.contextEn, op.demographicInfo?.contextZh),
+      purpose: bi(op.operationPurposeEn, op.operationPurposeZh),
+      introduction: bi(op.operationDetailsEn, op.operationDetailsZh),
+      opTime: bi(op.estimatedOperationTimeRemarkEn, op.estimatedOperationTimeRemarkZh),
       hospitals: (op.privateHospitalOperationChargeDetails ?? []).map((h) => ({
-        name: na(h.hospital?.nameEn),
-        official: na(h.operationEn),
+        name: bi(h.hospital?.nameEn, h.hospital?.nameZh),
+        official: bi(h.operationEn, h.operationZh),
         setting: na(h.lengthOfStay),
         priceRange: na(h.medicalExpenseRange),
         inRider: !!h.isRiderHospital,

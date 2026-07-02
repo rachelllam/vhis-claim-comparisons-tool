@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { AGE_MIN, AGE_MAX, CURRENT_YEAR } from '../quote';
+import { useLang } from '../i18n';
 import type { Profile } from '../types';
 import { CCSegmented } from './common';
 
@@ -94,6 +95,7 @@ function BirthYearPicker({
   onApply: (a: number) => void;
   onClose: () => void;
 }) {
+  const { t } = useLang();
   const yearFromAge = (a: number) => CURRENT_YEAR - a;
   const [draftYear, setDraftYear] = useState(yearFromAge(age));
   const [month, setMonth] = useState<number | null>(null); // null = "not specified"
@@ -137,12 +139,12 @@ function BirthYearPicker({
   };
 
   return (
-    <div style={s.pop} ref={popRef} role="dialog" aria-label="Select birth year">
+    <div style={s.pop} ref={popRef} role="dialog" aria-label={t('profile.selectBirthYear')}>
       <span style={s.popCaret}></span>
-      <h4 style={s.popTitle}>Select birth year</h4>
+      <h4 style={s.popTitle}>{t('profile.selectBirthYear')}</h4>
       <div style={s.popCols}>
         <div style={s.popColYear}>
-          <div style={s.popColLabel}>Year</div>
+          <div style={s.popColLabel}>{t('profile.year')}</div>
           <div style={s.yearInputWrap(yearFocus)}>
             <input
               style={s.yearInput}
@@ -152,7 +154,7 @@ function BirthYearPicker({
               onBlur={() => setYearFocus(false)}
               onChange={(e) => commitYear(Number(e.target.value))}
             />
-            <span style={s.yearBadge}>{draftAge} yrs</span>
+            <span style={s.yearBadge}>{draftAge} {t('profile.yrs')}</span>
           </div>
           <div className="cc-scroll" style={s.yearList} ref={listRef}>
             {years.map((y) => {
@@ -175,10 +177,10 @@ function BirthYearPicker({
         </div>
         <div style={s.popColMonth}>
           <div style={s.popColLabel}>
-            Month <span style={s.popColLabelHint}>optional</span>
+            {t('profile.month')} <span style={s.popColLabelHint}>{t('profile.optional')}</span>
           </div>
           <button style={s.monthAny(month === null)} onClick={() => setMonth(null)}>
-            Not specified
+            {t('profile.notSpecified')}
           </button>
           <div style={s.monthGrid}>
             {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
@@ -191,11 +193,11 @@ function BirthYearPicker({
       </div>
       <div style={s.popFooter}>
         <span style={s.popFooterAge}>
-          Age<span style={s.popFooterAgeVal}>{draftAge}</span>
+          {t('profile.age')}<span style={s.popFooterAgeVal}>{draftAge}</span>
         </span>
         <div style={s.popBtns}>
-          <button style={s.popCancel} onClick={onClose}>Cancel</button>
-          <button style={s.popApply} onClick={() => { onApply(draftAge); onClose(); }}>Apply</button>
+          <button style={s.popCancel} onClick={onClose}>{t('profile.cancel')}</button>
+          <button style={s.popApply} onClick={() => { onApply(draftAge); onClose(); }}>{t('profile.apply')}</button>
         </div>
       </div>
     </div>
@@ -210,6 +212,7 @@ export function ProfileForm({
   profile: Profile;
   onChange: (p: Profile) => void;
 }) {
+  const { t } = useLang();
   const [pickerOpen, setPickerOpen] = useState(false);
   const set = (patch: Partial<Profile>) => onChange({ ...profile, ...patch });
   const setAge = (a: number) => set({ age: Math.min(AGE_MAX, Math.max(AGE_MIN, a)) });
@@ -221,14 +224,14 @@ export function ProfileForm({
         <div style={s.toggleCol}>
           <CCSegmented
             value={profile.gender}
-            options={[{ id: 'female', label: 'Female' }, { id: 'male', label: 'Male' }]}
+            options={[{ id: 'female', label: t('common.female') }, { id: 'male', label: t('common.male') }]}
             onChange={(gender) => set({ gender: gender as Profile['gender'] })}
           />
         </div>
         <div style={s.toggleCol}>
           <CCSegmented
             value={profile.smoker ? 'yes' : 'no'}
-            options={[{ id: 'no', label: 'Non-smoker' }, { id: 'yes', label: 'Smoker' }]}
+            options={[{ id: 'no', label: t('profile.nonSmoker') }, { id: 'yes', label: t('profile.smoker') }]}
             onChange={(v) => set({ smoker: v === 'yes' })}
           />
         </div>
@@ -237,7 +240,7 @@ export function ProfileForm({
       {/* age: label + slider + number + cake picker */}
       <div style={s.ageWrap}>
         <div style={s.ageRow}>
-          <span style={s.ageRowLabel}>Age</span>
+          <span style={s.ageRowLabel}>{t('profile.age')}</span>
           <span style={s.ageSliderWrap}>
             <input
               className="cc-range"
@@ -263,8 +266,8 @@ export function ProfileForm({
           <button
             style={s.cakeBtn(pickerOpen)}
             onClick={() => setPickerOpen((o) => !o)}
-            title="Pick by birth year"
-            aria-label="Pick by birth year"
+            title={t('profile.pickByBirthYear')}
+            aria-label={t('profile.pickByBirthYear')}
             aria-expanded={pickerOpen}
           >
             {/* Lucide "cake" — substitute for Bowtie's UI icon set */}

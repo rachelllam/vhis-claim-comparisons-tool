@@ -2,9 +2,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { SURGERY_TIERS, VHIS_PLANS, computeBreakdown, fmtHK, fmtHKShort, tierIndex } from '../data';
-import type { SurgeryCase, VhisPlan, Ward } from '../data';
+import type { SurgeryCase, VhisPlan } from '../data';
 import { useOperationData } from '../useOperationData';
+import { useLang, pick, pickCaseName, wardLabel } from '../i18n';
+import type { Lang, StringKey } from '../i18n';
 import type { SelectedPlan, CoverageView } from '../types';
+
+type T = (key: StringKey) => string;
 
 const ccMsgStylesV2 = {
   textarea: {
@@ -23,67 +27,72 @@ const ccMsgStylesV2 = {
   } as CSSProperties,
 };
 
-const capLabelMsg = (plan: VhisPlan) => (plan.perSurgery >= 999999 ? 'No cap' : fmtHKShort(plan.perSurgery) + ' per surgery');
-const wardLabelMsg: Record<Ward, string> = { standard: 'Standard ward', 'semi-private': 'Semi-private', private: 'Private' };
+const genderLabelMsg = (gender: string, t: T) =>
+  gender === 'male' ? t('common.male') : gender === 'female' ? t('common.female') : t('common.any');
+const ageLabelMsg = (age: string, t: T) => (age === 'all' ? t('common.anyAge') : age);
+const capLabelMsg = (plan: VhisPlan, t: T) =>
+  plan.perSurgery >= 999999 ? t('common.noCap') : t('msg.perSurgeryCapTpl').replace('{amount}', fmtHKShort(plan.perSurgery));
 
 // ── By case: one surgery, many plans ──
-function buildByCase({ caseItem, plans }: { caseItem: SurgeryCase | null; plans: SelectedPlan[] }): string {
+function buildByCase({ caseItem, plans, lang, t }: { caseItem: SurgeryCase | null; plans: SelectedPlan[]; lang: Lang; t: T }): string {
   if (!caseItem) return '';
   const activePlans = plans.filter(Boolean);
   const lines: string[] = [];
-  lines.push('Hi! Here’s a quick example of what your surgery could cost:');
+  lines.push(t('msg.greetingCase'));
   lines.push('');
-  const tierEn = SURGERY_TIERS.find((t) => t.id === caseItem.tier)?.en;
-  lines.push(`Procedure: ${tierEn} — ${caseItem.en}`);
-  lines.push(`Estimated total: ${fmtHK(caseItem.cost)}`);
-  const genderLabel = caseItem.gender === 'male' ? 'Male' : caseItem.gender === 'female' ? 'Female' : 'Any';
-  const ageLabel = caseItem.age === 'all' ? 'Any age' : caseItem.age;
-  lines.push(`Reference profile: ${genderLabel} · ${ageLabel}`);
+  const tier = SURGERY_TIERS.find((x) => x.id === caseItem.tier);
+  const tierName = tier ? pick(tier, lang) : '';
+  lines.push(`${t('msg.procedure')}${tierName} — ${pickCaseName(caseItem, lang)}`);
+  lines.push(`${t('msg.estTotal')}${fmtHK(caseItem.cost)}`);
+  lines.push(`${t('msg.refProfile')}${genderLabelMsg(caseItem.gender, t)} · ${ageLabelMsg(caseItem.age, t)}`);
   lines.push('');
   if (activePlans.length > 0) {
-    lines.push('VHIS plan comparison:');
+    lines.push(t('msg.comparison'));
     activePlans.forEach((p) => {
       const planDef = VHIS_PLANS.find((v) => v.id === p.id)!;
       const br = computeBreakdown({ totalCost: caseItem.cost, gm: { enabled: false }, plan: planDef, deductible: p.deductible });
-      lines.push(`  • ${planDef.en}`);
-      lines.push(`    Deductible: ${p.deductible === 0 ? 'None' : fmtHK(p.deductible)}`);
-      lines.push(`    VHIS pays: ${fmtHK(br.vhis)}`);
-      lines.push(`    You pay: ${fmtHK(br.customerPays)}${br.customerPays === 0 ? '  — fully covered' : ''}`);
+      lines.push(`  • ${pick(planDef, lang)}`);
+      lines.push(`    ${t('msg.deductible')}${p.deductible === 0 ? t('common.none') : fmtHK(p.deductible)}`);
+      lines.push(`    ${t('msg.vhisPays')}${fmtHK(br.vhis)}`);
+      lines.push(`    ${t('msg.youPay')}${fmtHK(br.customerPays)}${br.customerPays === 0 ? t('msg.fullyCovered') : ''}`);
     });
     lines.push('');
   }
-  lines.push('Let me know if you have any questions — happy to walk through it.');
+  lines.push(t('msg.closing'));
   return lines.join('\n');
 }
 
 // ── By plan: one plan, many surgeries ──
-function buildByPlan({ focus, focusDef, cases }: { focus: SelectedPlan | undefined; focusDef: VhisPlan | null; cases: SurgeryCase[] }): string {
+function buildByPlan({ focus, focusDef, cases, lang, t }: { focus: SelectedPlan | undefined; focusDef: VhisPlan | null; cases: SurgeryCase[]; lang: Lang; t: T }): string {
   if (!focusDef || !focus) return '';
+  const planName = pick(focusDef, lang);
   const lines: string[] = [];
-  lines.push(`Hi! Here’s how ${focusDef.en} would cover you across different surgeries:`);
+  lines.push(t('msg.greetingPlanTpl').replace('{plan}', planName));
   lines.push('');
-  lines.push(`Plan: ${focusDef.en}`);
-  lines.push(`Deductible: ${focus.deductible === 0 ? 'None' : fmtHK(focus.deductible)}`);
-  lines.push(`Per-surgery limit: ${capLabelMsg(focusDef)}`);
-  lines.push(`Ward: ${wardLabelMsg[focusDef.ward] || focusDef.ward}`);
+  lines.push(`${t('msg.plan')}${planName}`);
+  lines.push(`${t('msg.deductible')}${focus.deductible === 0 ? t('common.none') : fmtHK(focus.deductible)}`);
+  lines.push(`${t('msg.perSurgeryLimit')}${capLabelMsg(focusDef, t)}`);
+  lines.push(`${t('msg.ward')}${wardLabel(focusDef.ward, t)}`);
   lines.push('');
   if (cases.length > 0) {
-    lines.push('Coverage by surgery:');
+    lines.push(t('msg.coverageBySurgery'));
     cases.forEach((c) => {
-      const tierEn = SURGERY_TIERS.find((t) => t.id === c.tier)?.en;
+      const tier = SURGERY_TIERS.find((x) => x.id === c.tier);
+      const tierName = tier ? pick(tier, lang) : '';
       const br = computeBreakdown({ totalCost: c.cost, gm: { enabled: false }, plan: focusDef, deductible: focus.deductible });
-      lines.push(`  • ${tierEn} — ${c.en} (${fmtHK(c.cost)})`);
-      lines.push(`    VHIS pays: ${fmtHK(br.vhis)}`);
-      lines.push(`    You pay: ${fmtHK(br.customerPays)}${br.customerPays === 0 ? '  — fully covered' : ''}`);
+      lines.push(`  • ${tierName} — ${pickCaseName(c, lang)} (${fmtHK(c.cost)})`);
+      lines.push(`    ${t('msg.vhisPays')}${fmtHK(br.vhis)}`);
+      lines.push(`    ${t('msg.youPay')}${fmtHK(br.customerPays)}${br.customerPays === 0 ? t('msg.fullyCovered') : ''}`);
     });
     lines.push('');
   }
-  lines.push('Let me know if you have any questions — happy to walk through it.');
+  lines.push(t('msg.closing'));
   return lines.join('\n');
 }
 
 export function MessagePanel({ plans, cv, onCollapse }: { plans: SelectedPlan[]; cv: CoverageView; onCollapse?: () => void }) {
   const { cases: allCases } = useOperationData();
+  const { lang, t } = useLang();
   const mode = cv ? cv.mode : 'case';
 
   const msg = useMemo(() => {
@@ -94,14 +103,14 @@ export function MessagePanel({ plans, cv, onCollapse }: { plans: SelectedPlan[];
       const cases = allCases.filter((c) => cv.selectedCaseIds.includes(c.id))
         .slice()
         .sort((a, b) => tierIndex(a.tier) - tierIndex(b.tier) || a.cost - b.cost);
-      return buildByPlan({ focus, focusDef, cases });
+      return buildByPlan({ focus, focusDef, cases, lang, t });
     }
     const chosen = allCases.filter((c) => cv.selectedCaseIds.includes(c.id))
       .slice()
       .sort((a, b) => tierIndex(a.tier) - tierIndex(b.tier) || a.cost - b.cost);
     const focusCase = chosen.find((c) => c.id === cv.focusCaseId) || chosen[0] || null;
-    return buildByCase({ caseItem: focusCase, plans });
-  }, [allCases, mode, plans, cv && cv.focusPlanId, cv && cv.focusCaseId, cv && cv.selectedCaseIds]);
+    return buildByCase({ caseItem: focusCase, plans, lang, t });
+  }, [allCases, mode, plans, cv && cv.focusPlanId, cv && cv.focusCaseId, cv && cv.selectedCaseIds, lang, t]);
 
   const [draft, setDraft] = useState(msg);
   const [dirty, setDirty] = useState(false);
@@ -111,12 +120,12 @@ export function MessagePanel({ plans, cv, onCollapse }: { plans: SelectedPlan[];
   useEffect(() => {
     if (!dirty) setDraft(msg);
   }, [msg, dirty]);
-  // Switching lens always regenerates, even if previously edited.
+  // Switching lens or language always regenerates, even if previously edited.
   useEffect(() => {
     setDraft(msg);
     setDirty(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
+  }, [mode, lang]);
 
   const onEdit = (val: string) => {
     setDraft(val);
@@ -132,17 +141,17 @@ export function MessagePanel({ plans, cv, onCollapse }: { plans: SelectedPlan[];
     }
   };
 
-  const sub = mode === 'plan' ? 'WhatsApp · one plan across surgeries' : 'WhatsApp to customer · ready to send';
+  const sub = mode === 'plan' ? t('msg.subByPlan') : t('msg.subByCase');
 
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div>
-          <h2 className="cc-panel-h1">Message</h2>
+          <h2 className="cc-panel-h1">{t('msg.title')}</h2>
           <p className="cc-panel-sub">{sub}</p>
         </div>
         {onCollapse && (
-          <button className="cc-icon-btn" title="Collapse" onClick={onCollapse} style={{ flexShrink: 0 }}>
+          <button className="cc-icon-btn" title={t('msg.collapse')} onClick={onCollapse} style={{ flexShrink: 0 }}>
             <svg viewBox="0 0 24 24">
               <path d="M9 6l6 6-6 6"></path>
             </svg>
@@ -154,18 +163,18 @@ export function MessagePanel({ plans, cv, onCollapse }: { plans: SelectedPlan[];
         style={ccMsgStylesV2.textarea}
         value={draft}
         onChange={(e) => onEdit(e.target.value)}
-        placeholder="Pick a case + plans to generate a message..."
+        placeholder={t('msg.placeholder')}
       />
 
       <div style={ccMsgStylesV2.footerRow}>
         <span style={ccMsgStylesV2.charCount}>
-          {draft.length} chars {dirty && <span style={{ color: 'var(--bt-yellow-submarine)' }}>· edited</span>}
+          {draft.length} {t('msg.chars')} {dirty && <span style={{ color: 'var(--bt-yellow-submarine)' }}>{t('msg.edited')}</span>}
         </span>
         <button
           style={{ ...ccMsgStylesV2.primaryBtn, background: copied ? 'var(--bt-green-day)' : 'var(--bt-bowtie-pink)' }}
           onClick={onCopy}
         >
-          {copied ? '✓ Copied' : 'Copy'}
+          {copied ? t('msg.copied') : t('msg.copy')}
         </button>
       </div>
     </div>
