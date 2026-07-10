@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { monthlyPremium } from '../quote';
+import { useLang } from '../i18n';
 import type { Profile } from '../types';
 
 // Shared quote styling (badge used on plan cards + result cards).
@@ -50,12 +51,13 @@ export function PremiumBadge({
   profile: Profile;
   style?: CSSProperties;
 }) {
+  const { t } = useLang();
   const m = monthlyPremium(planId, profile);
   if (m == null) return null;
   return (
     <span style={{ ...ccQuote.badge, ...style }}>
       HK${m.toLocaleString('en-US')}
-      <span style={ccQuote.badgePer}>/mo</span>
+      <span style={ccQuote.badgePer}>{t('common.perMonth')}</span>
     </span>
   );
 }

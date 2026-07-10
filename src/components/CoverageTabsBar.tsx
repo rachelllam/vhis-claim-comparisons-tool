@@ -1,4 +1,6 @@
 import { VHIS_PLANS, casesFromIds } from '../data';
+import { useOperationData } from '../useOperationData';
+import { useLang, pick, pickCaseShort } from '../i18n';
 import type { SelectedPlan, CoverageView } from '../types';
 import { ccV2 } from './chartStyles';
 
@@ -13,13 +15,15 @@ export function CoverageTabsBar({
   plans: SelectedPlan[];
   cv: CoverageView;
   onRemove: (id: string) => void;
-  onRemoveCase: (en: string) => void;
+  onRemoveCase: (id: string) => void;
 }) {
+  const { cases } = useOperationData();
+  const { t, lang } = useLang();
   const mode = cv.mode;
   const setMode = cv.setMode;
   const activePlans = plans.filter(Boolean);
-  const chosenCases = casesFromIds(cv.selectedCaseIds);
-  const resolvedCaseId = (chosenCases.find((c) => c.en === cv.focusCaseId) || chosenCases[0] || ({} as { en?: string })).en;
+  const chosenCases = casesFromIds(cases, cv.selectedCaseIds);
+  const resolvedCaseId = (chosenCases.find((c) => c.id === cv.focusCaseId) || chosenCases[0] || ({} as { id?: string })).id;
   const resolvedPlanId = (activePlans.find((p) => p.id === cv.focusPlanId) || activePlans[0] || ({} as { id?: string })).id;
   const caseIcon = (
     <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="var(--bt-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -60,7 +64,7 @@ export function CoverageTabsBar({
       <span
         style={ccV2.bTabX(on)}
         role="button"
-        title="Remove from comparison"
+        title={t('common.removeFromComparison')}
         onClick={(e) => { e.stopPropagation(); onClose(); }}
       >
         <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
@@ -72,27 +76,27 @@ export function CoverageTabsBar({
   return (
     <div>
       <div style={ccV2.tabStrip} role="tablist">
-        <span style={ccV2.groupLabel('var(--bt-bowtie-pink)')}>Cases</span>
+        <span style={ccV2.groupLabel('var(--bt-bowtie-pink)')}>{t('tabs.cases')}</span>
         {chosenCases.length === 0 ? (
-          <span style={ccV2.emptyHint}>Pick surgeries in the Case tab →</span>
+          <span style={ccV2.emptyHint}>{t('tabs.pickCasesHint')}</span>
         ) : (
           chosenCases.map((c) => (
             <TabBtn
-              key={c.en}
+              key={c.id}
               favColor="var(--bt-bowtie-pink)"
               icon={caseIcon}
-              label={c.simple || c.en}
-              on={mode === 'case' && c.en === resolvedCaseId}
-              onClick={() => { setMode('case'); cv.setFocusCaseId(c.en); }}
-              onClose={() => onRemoveCase(c.en)}
+              label={pickCaseShort(c, lang)}
+              on={mode === 'case' && c.id === resolvedCaseId}
+              onClick={() => { setMode('case'); cv.setFocusCaseId(c.id); }}
+              onClose={() => onRemoveCase(c.id)}
             />
           ))
         )}
       </div>
       <div style={ccV2.tabStrip2} role="tablist">
-        <span style={ccV2.groupLabel('var(--bt-bowtie-blue)')}>Plans</span>
+        <span style={ccV2.groupLabel('var(--bt-bowtie-blue)')}>{t('tabs.plans')}</span>
         {activePlans.length === 0 ? (
-          <span style={ccV2.emptyHint}>Pick plans in the Plan tab →</span>
+          <span style={ccV2.emptyHint}>{t('tabs.pickPlansHint')}</span>
         ) : (
           activePlans.map((p) => {
             const def = VHIS_PLANS.find((v) => v.id === p.id);
@@ -101,7 +105,7 @@ export function CoverageTabsBar({
                 key={p.id}
                 favColor="var(--bt-bowtie-blue)"
                 icon={planIcon}
-                label={def ? def.en : p.id}
+                label={def ? pick(def, lang) : p.id}
                 on={mode === 'plan' && p.id === resolvedPlanId}
                 onClick={() => { setMode('plan'); cv.setFocusPlanId(p.id); }}
                 onClose={() => onRemove(p.id)}
