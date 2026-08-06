@@ -20,6 +20,10 @@ import { MessagePanel } from './components/MessagePanel';
 
 type MsgState = 'open' | 'collapsed' | 'wide';
 
+// Quotation (indicative monthly premium) UI is hidden from the screen but its
+// logic/state/types stay wired — flip this back to re-enable everything.
+const SHOW_QUOTES_UI = false;
+
 const v3 = {
   youIntro: { font: '400 13px/1.5 var(--bt-font)', color: 'var(--bt-graphite)', margin: '0 0 18px' } as CSSProperties,
   // disabled-form veil (when quotes off)
@@ -90,21 +94,23 @@ function LeftRail({
   aboutProps: AboutProps;
 }) {
   const { t } = useLang();
-  const [active, setActive] = useState<RailTab>('about');
+  const [active, setActive] = useState<RailTab>(SHOW_QUOTES_UI ? 'about' : 'configure');
   const caseCount = caseProps.selectedCaseIds.length;
 
   return (
     <div>
       <div className="cc-rtabbar" role="tablist">
-        <button className={'cc-rtab' + (active === 'about' ? ' on' : '')} onClick={() => setActive('about')}>
-          <span className="cc-fav cc-fav-you">
-            <svg viewBox="0 0 12 12">
-              <circle cx="6" cy="4" r="2"></circle>
-              <path d="M2.5 10c0-2 1.6-3 3.5-3s3.5 1 3.5 3"></path>
-            </svg>
-          </span>
-          {t('rail.about')}
-        </button>
+        {SHOW_QUOTES_UI && (
+          <button className={'cc-rtab' + (active === 'about' ? ' on' : '')} onClick={() => setActive('about')}>
+            <span className="cc-fav cc-fav-you">
+              <svg viewBox="0 0 12 12">
+                <circle cx="6" cy="4" r="2"></circle>
+                <path d="M2.5 10c0-2 1.6-3 3.5-3s3.5 1 3.5 3"></path>
+              </svg>
+            </span>
+            {t('rail.about')}
+          </button>
+        )}
         <button className={'cc-rtab' + (active === 'configure' ? ' on' : '')} onClick={() => setActive('configure')}>
           <span className="cc-fav cc-fav-plan">
             <svg viewBox="0 0 12 12">
@@ -124,7 +130,7 @@ function LeftRail({
         </button>
       </div>
 
-      {active === 'about' && <YouTabBody {...aboutProps} />}
+      {SHOW_QUOTES_UI && active === 'about' && <YouTabBody {...aboutProps} />}
       {active === 'configure' && <PlanTab {...configProps} hideHeader />}
       {active === 'case' && <CaseTab {...caseProps} hideHeader />}
     </div>
@@ -154,16 +160,20 @@ function CCTopBar({ onClearAll, showQuotes, setShowQuotes }: { onClearAll: () =>
         >
           {lang === 'en' ? '中文' : 'EN'}
         </button>
-        <span style={{ width: 1, height: 18, background: 'var(--bt-stone)' }}></span>
-        <button
-          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-          onClick={() => setShowQuotes(!showQuotes)}
-          aria-pressed={showQuotes}
-          title={t('topbar.quotesTitle')}
-        >
-          <span style={{ font: '700 13px/1 var(--bt-font)', color: showQuotes ? 'var(--bt-bowtie-pink)' : 'var(--bt-graphite)' }}>{t('topbar.quotes')}</span>
-          <span className={'cc-toggle' + (showQuotes ? ' on' : '')} aria-hidden="true"></span>
-        </button>
+        {SHOW_QUOTES_UI && (
+          <>
+            <span style={{ width: 1, height: 18, background: 'var(--bt-stone)' }}></span>
+            <button
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+              onClick={() => setShowQuotes(!showQuotes)}
+              aria-pressed={showQuotes}
+              title={t('topbar.quotesTitle')}
+            >
+              <span style={{ font: '700 13px/1 var(--bt-font)', color: showQuotes ? 'var(--bt-bowtie-pink)' : 'var(--bt-graphite)' }}>{t('topbar.quotes')}</span>
+              <span className={'cc-toggle' + (showQuotes ? ' on' : '')} aria-hidden="true"></span>
+            </button>
+          </>
+        )}
         <span style={{ width: 1, height: 18, background: 'var(--bt-stone)' }}></span>
         <button className="cc-link" onClick={onClearAll}>
           {t('topbar.clearAll')}
@@ -184,7 +194,7 @@ function CoverageApp() {
 
   // About-you profile (SEPARATE from case filters; drives premiums)
   const [profile, setProfile] = useState<Profile>({ age: 42, gender: 'male', smoker: false });
-  const [showQuotes, setShowQuotes] = useState(true);
+  const [showQuotes, setShowQuotes] = useState(false);
 
   const [plans, setPlans] = useState<SelectedPlan[]>([
     { id: 'flexi-sup', deductible: 0 },
@@ -199,10 +209,18 @@ function CoverageApp() {
   const [msgState, setMsgState] = useState<MsgState>('open');
   const [coverageMode, setCoverageMode] = useState<CoverageMode>('case');
   const [focusPlanId, setFocusPlanId] = useState<string | null>('flexi-sup');
+  const [focusPlanDeductible, setFocusPlanDeductible] = useState<number | null>(0);
   const [focusCaseId, setFocusCaseId] = useState<string | null>(selectedCaseIds[0] || null);
 
+  const setFocusPlan = (id: string | null, deductible: number | null) => {
+    setFocusPlanId(id);
+    setFocusPlanDeductible(deductible);
+  };
+
   useEffect(() => {
-    if (!plans.find((p) => p.id === focusPlanId)) setFocusPlanId(plans[0] ? plans[0].id : null);
+    if (!plans.some((p) => p.id === focusPlanId && p.deductible === focusPlanDeductible)) {
+      setFocusPlan(plans[0] ? plans[0].id : null, plans[0] ? plans[0].deductible : null);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plans]);
   useEffect(() => {
@@ -212,16 +230,16 @@ function CoverageApp() {
 
   const addPlan = (id: string, deductible: number) =>
     setPlans((prev) => (prev.find((p) => p.id === id) ? prev : [...prev, { id, deductible }]));
-  const removePlan = (id: string) => setPlans((prev) => prev.filter((p) => p.id !== id));
+  const removePlan = (id: string, deductible: number) =>
+    setPlans((prev) => prev.filter((p) => !(p.id === id && p.deductible === deductible)));
   const setPlanDeductible = (id: string, deductible: number) =>
     setPlans((prev) => prev.map((p) => (p.id === id ? { ...p, deductible } : p)));
+  // Pink/flexi-premium plans allow multiple deductible tiers of the same ward at
+  // once — each cell toggles its own (id, deductible) pair independently.
   const selectPinkCell = (id: string, deductible: number) => {
     setPlans((prev) => {
-      const existing = prev.find((p) => p.id === id);
-      if (existing) {
-        if (existing.deductible === deductible) return prev.filter((p) => p.id !== id);
-        return prev.map((p) => (p.id === id ? { ...p, deductible } : p));
-      }
+      const exists = prev.some((p) => p.id === id && p.deductible === deductible);
+      if (exists) return prev.filter((p) => !(p.id === id && p.deductible === deductible));
       return [...prev, { id, deductible }];
     });
   };
@@ -248,7 +266,8 @@ function CoverageApp() {
     mode: coverageMode,
     setMode: setCoverageMode,
     focusPlanId,
-    setFocusPlanId,
+    focusPlanDeductible,
+    setFocusPlan,
     focusCaseId,
     setFocusCaseId,
     selectedCaseIds,

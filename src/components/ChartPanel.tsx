@@ -151,7 +151,7 @@ function ResultCardV2({
 }
 
 // ── Headers ──
-function PlanHeader({ plan, deductible, onRemove }: { plan: VhisPlan; deductible: number; onRemove?: (id: string) => void }) {
+function PlanHeader({ plan, deductible, onRemove }: { plan: VhisPlan; deductible: number; onRemove?: (id: string, deductible: number) => void }) {
   const { t, lang } = useLang();
   return (
     <div style={ccChartStyles.planHead}>
@@ -164,7 +164,7 @@ function PlanHeader({ plan, deductible, onRemove }: { plan: VhisPlan; deductible
           {t('chart.deductible')} · <strong style={{ color: 'var(--bt-ink)' }}>{deductible === 0 ? t('common.none') : fmtHK(deductible)}</strong>
         </div>
         {onRemove && (
-          <button style={ccChartStyles.removeBtn} title={t('chart.removeThisPlan')} onClick={() => onRemove(plan.id)}>
+          <button style={ccChartStyles.removeBtn} title={t('chart.removeThisPlan')} onClick={() => onRemove(plan.id, deductible)}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
               <path d="M4 4 L12 12"></path>
               <path d="M12 4 L4 12"></path>
@@ -309,7 +309,7 @@ export function ChartPanel({
   quoteCtx,
 }: {
   plans: SelectedPlan[];
-  onRemove: (id: string) => void;
+  onRemove: (id: string, deductible: number) => void;
   onRemoveCase: (en: string) => void;
   cv: CoverageView;
   quoteCtx: QuoteCtx;
@@ -374,7 +374,7 @@ export function ChartPanel({
   }
 
   /* ── BY PLAN: one plan (chip-picked) × all selected cases ── */
-  const focus = activePlans.find((p) => p.id === cv.focusPlanId) || activePlans[0];
+  const focus = activePlans.find((p) => p.id === cv.focusPlanId && p.deductible === cv.focusPlanDeductible) || activePlans[0];
   const focusDef = focus ? VHIS_PLANS.find((v) => v.id === focus.id) : null;
 
   return (

@@ -98,7 +98,7 @@ export function MessagePanel({ plans, cv, onCollapse }: { plans: SelectedPlan[];
   const msg = useMemo(() => {
     const activePlans = plans.filter(Boolean);
     if (mode === 'plan') {
-      const focus = activePlans.find((p) => p.id === cv.focusPlanId) || activePlans[0];
+      const focus = activePlans.find((p) => p.id === cv.focusPlanId && p.deductible === cv.focusPlanDeductible) || activePlans[0];
       const focusDef = focus ? VHIS_PLANS.find((v) => v.id === focus.id) || null : null;
       const cases = allCases.filter((c) => cv.selectedCaseIds.includes(c.id))
         .slice()
@@ -110,7 +110,7 @@ export function MessagePanel({ plans, cv, onCollapse }: { plans: SelectedPlan[];
       .sort((a, b) => tierIndex(a.tier) - tierIndex(b.tier) || a.cost - b.cost);
     const focusCase = chosen.find((c) => c.id === cv.focusCaseId) || chosen[0] || null;
     return buildByCase({ caseItem: focusCase, plans, lang, t });
-  }, [allCases, mode, plans, cv && cv.focusPlanId, cv && cv.focusCaseId, cv && cv.selectedCaseIds, lang, t]);
+  }, [allCases, mode, plans, cv && cv.focusPlanId, cv && cv.focusPlanDeductible, cv && cv.focusCaseId, cv && cv.selectedCaseIds, lang, t]);
 
   const [draft, setDraft] = useState(msg);
   const [dirty, setDirty] = useState(false);
