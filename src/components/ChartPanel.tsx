@@ -3,13 +3,14 @@ import type { ReactNode } from 'react';
 import {
   SURGERY_TIERS,
   VHIS_PLANS,
-  computeBreakdown,
   getTreatmentDetail,
   casesFromIds,
   fmtHK,
   fmtHKShort,
 } from '../data';
-import type { SurgeryCase, SurgeryTier, VhisPlan } from '../data';
+import type { SurgeryCase, SurgeryTier, VhisPlan, TierId } from '../data';
+import { computeSurgeryPayout } from '../benefitSchedule';
+import { useBenefitSchedule } from '../useBenefitSchedule';
 import { useOperationData } from '../useOperationData';
 import { useLang, pick, pickCaseName, pickCaseShort, wardLabel } from '../i18n';
 import type { StringKey } from '../i18n';
@@ -28,38 +29,62 @@ const nightsLabel = (days: number, t: (k: StringKey) => string) =>
 // ── Generalised result card: header (JSX) + coverage bar + receipt ──
 function ResultCardV2({
   plan,
+  tier,
   totalCost,
   deductible,
   header,
   premium,
 }: {
   plan: VhisPlan;
+  tier: TierId;
   totalCost: number;
   deductible: number;
   header: ReactNode;
   premium?: number | null;
 }) {
   const { t } = useLang();
-  const breakdown = computeBreakdown({ totalCost, gm: { enabled: false }, plan, deductible });
+  const { schedule, error, loading } = useBenefitSchedule(plan.id, deductible);
   const [showDetails, setShowDetails] = useState(false);
 
-  const charge = totalCost;
-  const ded = breakdown.ded;
-  const overCap = breakdown.oop;
-  const covered = breakdown.vhis;
-  const youPay = breakdown.customerPays;
-  const zero = covered === 0;
-  const capLabel = plan.perSurgery >= 999999
-    ? t('chart.noPerSurgeryLimit')
-    : t('chart.planLimitPerSurgeryTpl').replace('{amount}', fmtHKShort(plan.perSurgery));
+  if (!schedule) {
+    return (
+      <div style={ccV2.card}>
+        {header}
+        <div style={{ marginTop: 12, font: '500 12px/1.5 var(--bt-font)', color: 'var(--bt-graphite)' }}>
+          {error ? t('chart.scheduleErrorTitle') : loading ? t('chart.scheduleLoading') : null}
+        </div>
+      </div>
+    );
+  }
 
-  const feeItems = [
-    { label: t('chart.feeSurgeon'), amount: Math.round(totalCost * 0.5) },
-    { label: t('chart.feeAnaesthetist'), amount: Math.round(totalCost * 0.15) },
-    { label: t('chart.feeTheatre'), amount: totalCost - Math.round(totalCost * 0.5) - Math.round(totalCost * 0.15) },
-    { label: t('chart.feeSmm'), amount: Math.round(totalCost * 0.2) },
-    { label: t('chart.feeDayCash'), amount: 1500 },
-  ];
+  const payout = computeSurgeryPayout(schedule, tier, totalCost);
+
+  const charge = totalCost;
+  const ded = payout.deductible;
+  const overCap = payout.oop;
+  const covered = payout.covered;
+  const youPay = payout.customerPays;
+  const zero = covered === 0;
+  const capLabel = t('chart.planLimitPerSurgeryTpl').replace('{amount}', fmtHKShort(payout.covered));
+
+  const feeItems: { label: string; amount: number; hint?: string }[] = payout.fees.itemized
+    ? [
+        { label: t('chart.feeSurgeon'), amount: payout.fees.surgeon },
+        { label: t('chart.feeAnaesthetist'), amount: payout.fees.anaesthetist },
+        { label: t('chart.feeTheatre'), amount: payout.fees.theatre },
+        ...(payout.smm > 0 && payout.smmBreakdown
+          ? [
+              {
+                label: t('chart.feeSmm'),
+                amount: payout.smm,
+                hint: t('chart.smmBreakdownTpl')
+                  .replace('{remaining}', fmtHK(payout.smmBreakdown.remaining))
+                  .replace('{pct}', String(payout.smmBreakdown.factorPct)),
+              },
+            ]
+          : []),
+      ]
+    : [{ label: t('chart.feeCombinedSurgical'), amount: payout.fees.combined }];
 
   // Bar follows spend order: deductible you pay first → VHIS covers → anything above the plan limit you pay.
   const segs = [
@@ -129,7 +154,10 @@ function ResultCardV2({
           <div style={ccChartStyles.detailList}>
             {feeItems.map((item, idx) => (
               <div key={item.label} style={{ ...ccChartStyles.detailRow, ...(idx === feeItems.length - 1 ? { borderBottom: 'none' } : {}) }}>
-                <span style={ccChartStyles.detailLabel}>{item.label}</span>
+                <span style={ccChartStyles.detailLabel}>
+                  {item.label}
+                  {item.hint && <span style={ccChartStyles.receiptHint}>{item.hint}</span>}
+                </span>
                 <span style={ccChartStyles.detailValue}>{fmtHK(item.amount)}</span>
               </div>
             ))}
@@ -151,7 +179,7 @@ function ResultCardV2({
 }
 
 // ── Headers ──
-function PlanHeader({ plan, deductible, onRemove }: { plan: VhisPlan; deductible: number; onRemove?: (id: string) => void }) {
+function PlanHeader({ plan, deductible, onRemove }: { plan: VhisPlan; deductible: number; onRemove?: (id: string, deductible: number) => void }) {
   const { t, lang } = useLang();
   return (
     <div style={ccChartStyles.planHead}>
@@ -164,7 +192,7 @@ function PlanHeader({ plan, deductible, onRemove }: { plan: VhisPlan; deductible
           {t('chart.deductible')} · <strong style={{ color: 'var(--bt-ink)' }}>{deductible === 0 ? t('common.none') : fmtHK(deductible)}</strong>
         </div>
         {onRemove && (
-          <button style={ccChartStyles.removeBtn} title={t('chart.removeThisPlan')} onClick={() => onRemove(plan.id)}>
+          <button style={ccChartStyles.removeBtn} title={t('chart.removeThisPlan')} onClick={() => onRemove(plan.id, deductible)}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
               <path d="M4 4 L12 12"></path>
               <path d="M12 4 L4 12"></path>
@@ -309,7 +337,7 @@ export function ChartPanel({
   quoteCtx,
 }: {
   plans: SelectedPlan[];
-  onRemove: (id: string) => void;
+  onRemove: (id: string, deductible: number) => void;
   onRemoveCase: (en: string) => void;
   cv: CoverageView;
   quoteCtx: QuoteCtx;
@@ -361,6 +389,7 @@ export function ChartPanel({
             <ResultCardV2
               key={`${p.id}-${i}`}
               plan={planDef}
+              tier={focusCase.tier}
               totalCost={focusCase.cost}
               deductible={p.deductible}
               premium={premOf(p.id)}
@@ -374,7 +403,7 @@ export function ChartPanel({
   }
 
   /* ── BY PLAN: one plan (chip-picked) × all selected cases ── */
-  const focus = activePlans.find((p) => p.id === cv.focusPlanId) || activePlans[0];
+  const focus = activePlans.find((p) => p.id === cv.focusPlanId && p.deductible === cv.focusPlanDeductible) || activePlans[0];
   const focusDef = focus ? VHIS_PLANS.find((v) => v.id === focus.id) : null;
 
   return (
@@ -419,6 +448,7 @@ export function ChartPanel({
               <ResultCardV2
                 key={c.id}
                 plan={focusDef}
+                tier={c.tier}
                 totalCost={c.cost}
                 deductible={focus.deductible}
                 header={<CaseHeader tier={tier} caseItem={c} onOpenDetail={() => setDetailCase(c)} />}

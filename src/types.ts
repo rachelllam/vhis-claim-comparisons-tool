@@ -21,7 +21,8 @@ export interface CoverageView {
   mode: CoverageMode;
   setMode: (m: CoverageMode) => void;
   focusPlanId: string | null;
-  setFocusPlanId: (id: string | null) => void;
+  focusPlanDeductible: number | null;
+  setFocusPlan: (id: string | null, deductible: number | null) => void;
   focusCaseId: string | null;
   setFocusCaseId: (id: string | null) => void;
   selectedCaseIds: string[];
