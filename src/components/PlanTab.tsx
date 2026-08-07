@@ -62,7 +62,7 @@ const dedColLabel = (d: number) => (d === 0 ? '$0' : '$' + Math.round(d / 1000) 
 interface PlanPickerProps {
   selected: SelectedPlan[];
   onAdd: (id: string, deductible: number) => void;
-  onRemove: (id: string) => void;
+  onRemove: (id: string, deductible: number) => void;
   onSetDeductible: (id: string, deductible: number) => void;
   onSelectPink: (id: string, deductible: number) => void;
   quoteCtx: QuoteCtx;
@@ -103,7 +103,7 @@ function CCPlanPicker({ selected, onAdd, onRemove, onSetDeductible, onSelectPink
               <button
                 style={ccPlanStyles.addBtn(isSel, false)}
                 title={isSel ? t('plan.remove') : t('plan.addShort')}
-                onClick={() => (isSel ? onRemove(plan.id) : onAdd(plan.id, plan.deductibles[0]))}
+                onClick={() => (isSel ? onRemove(plan.id, sel!.deductible) : onAdd(plan.id, plan.deductibles[0]))}
               >
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
                   {isSel ? (
@@ -135,7 +135,6 @@ function CCPlanPicker({ selected, onAdd, onRemove, onSetDeductible, onSelectPink
             </div>
           ))}
           {pinkPlans.map((plan) => {
-            const sel = findSel(plan.id);
             return (
               <Fragment key={plan.id}>
                 <div style={{ ...ccPlanStyles.wardHead, flexDirection: 'column', alignItems: 'flex-start', gap: 3, justifyContent: 'center' }}>
@@ -143,7 +142,8 @@ function CCPlanPicker({ selected, onAdd, onRemove, onSetDeductible, onSelectPink
                   {showQuote && <PremiumBadge planId={plan.id} profile={quoteCtx.profile} style={{ font: '700 11px/1 var(--bt-font)' }} />}
                 </div>
                 {pinkDeductibles.map((d) => {
-                  const isSel = sel && sel.deductible === d;
+                  // Multi-select: any number of deductible tiers per ward can be active at once.
+                  const isSel = selected.some((sp) => sp.id === plan.id && sp.deductible === d);
                   return (
                     <button
                       key={plan.id + d}
@@ -167,7 +167,7 @@ function CCPlanPicker({ selected, onAdd, onRemove, onSetDeductible, onSelectPink
 export interface PlanTabProps {
   plans: SelectedPlan[];
   onAdd: (id: string, deductible: number) => void;
-  onRemove: (id: string) => void;
+  onRemove: (id: string, deductible: number) => void;
   onSetDeductible: (id: string, deductible: number) => void;
   onSelectPink: (id: string, deductible: number) => void;
   quoteCtx: QuoteCtx;

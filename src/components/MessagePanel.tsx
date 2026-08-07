@@ -1,8 +1,11 @@
 // Right panel — WhatsApp message composer, adapts to "By case" / "By plan".
 import { useState, useMemo, useEffect } from 'react';
 import type { CSSProperties } from 'react';
-import { SURGERY_TIERS, VHIS_PLANS, computeBreakdown, fmtHK, fmtHKShort, tierIndex } from '../data';
+import { SURGERY_TIERS, VHIS_PLANS, fmtHK, fmtHKShort, tierIndex } from '../data';
 import type { SurgeryCase, VhisPlan } from '../data';
+import { computeSurgeryPayout } from '../benefitSchedule';
+import { useBenefitSchedules, scheduleKey } from '../useBenefitSchedule';
+import type { BenefitScheduleState } from '../useBenefitSchedule';
 import { useOperationData } from '../useOperationData';
 import { useLang, pick, pickCaseName, wardLabel } from '../i18n';
 import type { Lang, StringKey } from '../i18n';
@@ -33,8 +36,38 @@ const ageLabelMsg = (age: string, t: T) => (age === 'all' ? t('common.anyAge') :
 const capLabelMsg = (plan: VhisPlan, t: T) =>
   plan.perSurgery >= 999999 ? t('common.noCap') : t('msg.perSurgeryCapTpl').replace('{amount}', fmtHKShort(plan.perSurgery));
 
+// One "vhisPays"/"youPay" pair — real numbers once the schedule resolves, an
+// inline placeholder line while it's loading or if it failed.
+function payoutLines(
+  state: BenefitScheduleState | undefined,
+  tier: SurgeryCase['tier'],
+  cost: number,
+  t: T,
+): string[] {
+  if (state?.schedule) {
+    const payout = computeSurgeryPayout(state.schedule, tier, cost);
+    return [
+      `    ${t('msg.vhisPays')}${fmtHK(payout.covered)}`,
+      `    ${t('msg.youPay')}${fmtHK(payout.customerPays)}${payout.customerPays === 0 ? t('msg.fullyCovered') : ''}`,
+    ];
+  }
+  return [`    ${state?.error ? t('msg.unavailable') : t('msg.calculating')}`];
+}
+
 // ── By case: one surgery, many plans ──
-function buildByCase({ caseItem, plans, lang, t }: { caseItem: SurgeryCase | null; plans: SelectedPlan[]; lang: Lang; t: T }): string {
+function buildByCase({
+  caseItem,
+  plans,
+  scheduleMap,
+  lang,
+  t,
+}: {
+  caseItem: SurgeryCase | null;
+  plans: SelectedPlan[];
+  scheduleMap: Map<string, BenefitScheduleState>;
+  lang: Lang;
+  t: T;
+}): string {
   if (!caseItem) return '';
   const activePlans = plans.filter(Boolean);
   const lines: string[] = [];
@@ -50,11 +83,10 @@ function buildByCase({ caseItem, plans, lang, t }: { caseItem: SurgeryCase | nul
     lines.push(t('msg.comparison'));
     activePlans.forEach((p) => {
       const planDef = VHIS_PLANS.find((v) => v.id === p.id)!;
-      const br = computeBreakdown({ totalCost: caseItem.cost, gm: { enabled: false }, plan: planDef, deductible: p.deductible });
+      const state = scheduleMap.get(scheduleKey(p.id, p.deductible));
       lines.push(`  • ${pick(planDef, lang)}`);
       lines.push(`    ${t('msg.deductible')}${p.deductible === 0 ? t('common.none') : fmtHK(p.deductible)}`);
-      lines.push(`    ${t('msg.vhisPays')}${fmtHK(br.vhis)}`);
-      lines.push(`    ${t('msg.youPay')}${fmtHK(br.customerPays)}${br.customerPays === 0 ? t('msg.fullyCovered') : ''}`);
+      lines.push(...payoutLines(state, caseItem.tier, caseItem.cost, t));
     });
     lines.push('');
   }
@@ -63,7 +95,21 @@ function buildByCase({ caseItem, plans, lang, t }: { caseItem: SurgeryCase | nul
 }
 
 // ── By plan: one plan, many surgeries ──
-function buildByPlan({ focus, focusDef, cases, lang, t }: { focus: SelectedPlan | undefined; focusDef: VhisPlan | null; cases: SurgeryCase[]; lang: Lang; t: T }): string {
+function buildByPlan({
+  focus,
+  focusDef,
+  cases,
+  scheduleMap,
+  lang,
+  t,
+}: {
+  focus: SelectedPlan | undefined;
+  focusDef: VhisPlan | null;
+  cases: SurgeryCase[];
+  scheduleMap: Map<string, BenefitScheduleState>;
+  lang: Lang;
+  t: T;
+}): string {
   if (!focusDef || !focus) return '';
   const planName = pick(focusDef, lang);
   const lines: string[] = [];
@@ -76,13 +122,12 @@ function buildByPlan({ focus, focusDef, cases, lang, t }: { focus: SelectedPlan 
   lines.push('');
   if (cases.length > 0) {
     lines.push(t('msg.coverageBySurgery'));
+    const state = scheduleMap.get(scheduleKey(focus.id, focus.deductible));
     cases.forEach((c) => {
       const tier = SURGERY_TIERS.find((x) => x.id === c.tier);
       const tierName = tier ? pick(tier, lang) : '';
-      const br = computeBreakdown({ totalCost: c.cost, gm: { enabled: false }, plan: focusDef, deductible: focus.deductible });
       lines.push(`  • ${tierName} — ${pickCaseName(c, lang)} (${fmtHK(c.cost)})`);
-      lines.push(`    ${t('msg.vhisPays')}${fmtHK(br.vhis)}`);
-      lines.push(`    ${t('msg.youPay')}${fmtHK(br.customerPays)}${br.customerPays === 0 ? t('msg.fullyCovered') : ''}`);
+      lines.push(...payoutLines(state, c.tier, c.cost, t));
     });
     lines.push('');
   }
@@ -94,23 +139,24 @@ export function MessagePanel({ plans, cv, onCollapse }: { plans: SelectedPlan[];
   const { cases: allCases } = useOperationData();
   const { lang, t } = useLang();
   const mode = cv ? cv.mode : 'case';
+  const scheduleMap = useBenefitSchedules(plans);
 
   const msg = useMemo(() => {
     const activePlans = plans.filter(Boolean);
     if (mode === 'plan') {
-      const focus = activePlans.find((p) => p.id === cv.focusPlanId) || activePlans[0];
+      const focus = activePlans.find((p) => p.id === cv.focusPlanId && p.deductible === cv.focusPlanDeductible) || activePlans[0];
       const focusDef = focus ? VHIS_PLANS.find((v) => v.id === focus.id) || null : null;
       const cases = allCases.filter((c) => cv.selectedCaseIds.includes(c.id))
         .slice()
         .sort((a, b) => tierIndex(a.tier) - tierIndex(b.tier) || a.cost - b.cost);
-      return buildByPlan({ focus, focusDef, cases, lang, t });
+      return buildByPlan({ focus, focusDef, cases, scheduleMap, lang, t });
     }
     const chosen = allCases.filter((c) => cv.selectedCaseIds.includes(c.id))
       .slice()
       .sort((a, b) => tierIndex(a.tier) - tierIndex(b.tier) || a.cost - b.cost);
     const focusCase = chosen.find((c) => c.id === cv.focusCaseId) || chosen[0] || null;
-    return buildByCase({ caseItem: focusCase, plans, lang, t });
-  }, [allCases, mode, plans, cv && cv.focusPlanId, cv && cv.focusCaseId, cv && cv.selectedCaseIds, lang, t]);
+    return buildByCase({ caseItem: focusCase, plans, scheduleMap, lang, t });
+  }, [allCases, mode, plans, scheduleMap, cv && cv.focusPlanId, cv && cv.focusPlanDeductible, cv && cv.focusCaseId, cv && cv.selectedCaseIds, lang, t]);
 
   const [draft, setDraft] = useState(msg);
   const [dirty, setDirty] = useState(false);

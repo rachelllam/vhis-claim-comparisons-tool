@@ -244,8 +244,8 @@ export const getTreatmentDetail = (
 // All VHIS plans available (6). Each plan: annual coverage limit + per-surgery cap + ward class.
 export const VHIS_PLANS: VhisPlan[] = [
   { id: 'std',          zh: '自願醫保 — 標準計劃',           en: 'VHIS Standard',                ward: 'standard',     annual: 420000,  perSurgery: 50000,   deductibles: [0],                   color: 'var(--bt-graphite)' },
-  { id: 'flexi-basic',  zh: '自願醫保 — 靈活計劃（基本）',   en: 'Flexi Basic',                  ward: 'standard',     annual: 1500000, perSurgery: 200000,  deductibles: [0, 16000, 50000],     color: 'var(--bt-smurf)' },
-  { id: 'flexi-sup',    zh: '自願醫保 — 靈活計劃（升級）',   en: 'Flexi Superior',               ward: 'semi-private', annual: 8000000, perSurgery: 999999,  deductibles: [0, 16000, 50000],     color: 'var(--bt-bowtie-blue)' },
+  { id: 'flexi-basic',  zh: '自願醫保 — 靈活計劃（基本）',   en: 'Flexi Basic',                  ward: 'standard',     annual: 1500000, perSurgery: 200000,  deductibles: [0],                   color: 'var(--bt-smurf)' },
+  { id: 'flexi-sup',    zh: '自願醫保 — 靈活計劃（升級）',   en: 'Flexi Superior',               ward: 'semi-private', annual: 8000000, perSurgery: 999999,  deductibles: [0],                   color: 'var(--bt-bowtie-blue)' },
   { id: 'pink-std',     zh: '粉紅計劃（普通房）',            en: 'Pink (Standard ward)',          ward: 'standard',     annual: 3000000, perSurgery: 400000,  deductibles: [0, 20000, 50000, 80000], color: 'var(--bt-bubble-gum)' },
   { id: 'pink-semi',    zh: '粉紅計劃（半私家）',            en: 'Pink (Semi-private)',           ward: 'semi-private', annual: 5000000, perSurgery: 600000,  deductibles: [0, 20000, 50000, 80000], color: 'var(--bt-bowtie-pink)' },
   { id: 'pink-priv',    zh: '粉紅計劃（私家）',              en: 'Pink (Private)',                ward: 'private',      annual: 10000000,perSurgery: 800000,  deductibles: [0, 20000, 50000, 80000], color: 'var(--bt-dragon-fruit)' },
@@ -259,57 +259,11 @@ export const SEG_COLORS = {
   oop:   'var(--bt-rock)',
 };
 
-export interface CoverageBreakdown {
-  gm: number;
-  vhis: number;
-  ded: number;
-  oop: number;
-  customerPays: number;
-}
-
-interface GmContext {
-  enabled: boolean;
-  perSurgery?: number;
-  balance?: number;
-}
-
-// Compute coverage breakdown for one plan against a total cost + GM context
-export function computeBreakdown({
-  totalCost,
-  gm,
-  plan,
-  deductible,
-}: {
-  totalCost: number;
-  gm: GmContext;
-  plan: VhisPlan;
-  deductible: number;
-}): CoverageBreakdown {
-  // GM pays first, up to (perSurgery and remaining balance) min.
-  let remaining = totalCost;
-  let gmPaid = 0;
-  if (gm.enabled) {
-    gmPaid = Math.min(remaining, gm.perSurgery ?? Infinity, gm.balance ?? Infinity);
-    remaining -= gmPaid;
-  }
-  // VHIS: customer pays deductible portion, then VHIS pays up to perSurgery cap
-  const dedApplied = Math.min(remaining, deductible);
-  remaining -= dedApplied;
-  const vhisPaid = Math.min(remaining, plan.perSurgery);
-  remaining -= vhisPaid;
-  // Anything left is out-of-pocket
-  const oop = remaining;
-  return {
-    gm: gmPaid,
-    vhis: vhisPaid,
-    ded: dedApplied,
-    oop,
-    customerPays: dedApplied + oop,
-  };
-}
-
-export const fmtHK = (n: number): string => 'HK$' + (n || 0).toLocaleString('en-US');
+// Rounded down, not to nearest — coverage math (percentage splits, SMM factors)
+// produces long decimals; showing e.g. HK$2,941 rather than HK$2,941.176.
+export const fmtHK = (n: number): string => 'HK$' + Math.floor(n || 0).toLocaleString('en-US');
 export const fmtHKShort = (n: number): string => {
+  n = Math.floor(n || 0);
   if (!n) return 'HK$0';
   if (n >= 1000000) return 'HK$' + (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'M';
   if (n >= 1000) return 'HK$' + Math.round(n / 1000) + 'K';

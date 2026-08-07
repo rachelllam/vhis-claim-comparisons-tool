@@ -1,4 +1,4 @@
-import { VHIS_PLANS, casesFromIds } from '../data';
+import { VHIS_PLANS, casesFromIds, fmtHK } from '../data';
 import { useOperationData } from '../useOperationData';
 import { useLang, pick, pickCaseShort } from '../i18n';
 import type { SelectedPlan, CoverageView } from '../types';
@@ -14,7 +14,7 @@ export function CoverageTabsBar({
 }: {
   plans: SelectedPlan[];
   cv: CoverageView;
-  onRemove: (id: string) => void;
+  onRemove: (id: string, deductible: number) => void;
   onRemoveCase: (id: string) => void;
 }) {
   const { cases } = useOperationData();
@@ -24,7 +24,8 @@ export function CoverageTabsBar({
   const activePlans = plans.filter(Boolean);
   const chosenCases = casesFromIds(cases, cv.selectedCaseIds);
   const resolvedCaseId = (chosenCases.find((c) => c.id === cv.focusCaseId) || chosenCases[0] || ({} as { id?: string })).id;
-  const resolvedPlanId = (activePlans.find((p) => p.id === cv.focusPlanId) || activePlans[0] || ({} as { id?: string })).id;
+  const resolvedPlan =
+    activePlans.find((p) => p.id === cv.focusPlanId && p.deductible === cv.focusPlanDeductible) || activePlans[0];
   const caseIcon = (
     <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="var(--bt-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M1.5 3.5a1 1 0 0 1 1-1h2l1 1.2h3.5a1 1 0 0 1 1 1v3.8a1 1 0 0 1-1 1h-6.5a1 1 0 0 1-1-1z"></path>
@@ -100,15 +101,23 @@ export function CoverageTabsBar({
         ) : (
           activePlans.map((p) => {
             const def = VHIS_PLANS.find((v) => v.id === p.id);
+            // When more than one deductible tier of the same ward is active,
+            // append the deductible so tabs stay distinguishable.
+            const sameIdCount = activePlans.filter((x) => x.id === p.id).length;
+            const baseLabel = def ? pick(def, lang) : p.id;
+            const label =
+              sameIdCount > 1
+                ? `${baseLabel} · ${t('chart.deductible')} ${p.deductible === 0 ? t('common.none') : fmtHK(p.deductible)}`
+                : baseLabel;
             return (
               <TabBtn
-                key={p.id}
+                key={`${p.id}-${p.deductible}`}
                 favColor="var(--bt-bowtie-blue)"
                 icon={planIcon}
-                label={def ? pick(def, lang) : p.id}
-                on={mode === 'plan' && p.id === resolvedPlanId}
-                onClick={() => { setMode('plan'); cv.setFocusPlanId(p.id); }}
-                onClose={() => onRemove(p.id)}
+                label={label}
+                on={mode === 'plan' && p.id === resolvedPlan?.id && p.deductible === resolvedPlan?.deductible}
+                onClick={() => { setMode('plan'); cv.setFocusPlan(p.id, p.deductible); }}
+                onClose={() => onRemove(p.id, p.deductible)}
               />
             );
           })
