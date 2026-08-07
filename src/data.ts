@@ -259,57 +259,11 @@ export const SEG_COLORS = {
   oop:   'var(--bt-rock)',
 };
 
-export interface CoverageBreakdown {
-  gm: number;
-  vhis: number;
-  ded: number;
-  oop: number;
-  customerPays: number;
-}
-
-interface GmContext {
-  enabled: boolean;
-  perSurgery?: number;
-  balance?: number;
-}
-
-// Compute coverage breakdown for one plan against a total cost + GM context
-export function computeBreakdown({
-  totalCost,
-  gm,
-  plan,
-  deductible,
-}: {
-  totalCost: number;
-  gm: GmContext;
-  plan: VhisPlan;
-  deductible: number;
-}): CoverageBreakdown {
-  // GM pays first, up to (perSurgery and remaining balance) min.
-  let remaining = totalCost;
-  let gmPaid = 0;
-  if (gm.enabled) {
-    gmPaid = Math.min(remaining, gm.perSurgery ?? Infinity, gm.balance ?? Infinity);
-    remaining -= gmPaid;
-  }
-  // VHIS: customer pays deductible portion, then VHIS pays up to perSurgery cap
-  const dedApplied = Math.min(remaining, deductible);
-  remaining -= dedApplied;
-  const vhisPaid = Math.min(remaining, plan.perSurgery);
-  remaining -= vhisPaid;
-  // Anything left is out-of-pocket
-  const oop = remaining;
-  return {
-    gm: gmPaid,
-    vhis: vhisPaid,
-    ded: dedApplied,
-    oop,
-    customerPays: dedApplied + oop,
-  };
-}
-
-export const fmtHK = (n: number): string => 'HK$' + (n || 0).toLocaleString('en-US');
+// Rounded down, not to nearest — coverage math (percentage splits, SMM factors)
+// produces long decimals; showing e.g. HK$2,941 rather than HK$2,941.176.
+export const fmtHK = (n: number): string => 'HK$' + Math.floor(n || 0).toLocaleString('en-US');
 export const fmtHKShort = (n: number): string => {
+  n = Math.floor(n || 0);
   if (!n) return 'HK$0';
   if (n >= 1000000) return 'HK$' + (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'M';
   if (n >= 1000) return 'HK$' + Math.round(n / 1000) + 'K';
