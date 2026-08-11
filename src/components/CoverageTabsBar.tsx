@@ -75,8 +75,8 @@ export function CoverageTabsBar({
     </button>
   );
   return (
-    <div>
-      <div style={ccV2.tabStrip} role="tablist">
+    <div className="cc-tabsbar-wrap">
+      <div className="cc-scroll-x" style={ccV2.tabStrip} role="tablist">
         <span style={ccV2.groupLabel('var(--bt-bowtie-pink)')}>{t('tabs.cases')}</span>
         {chosenCases.length === 0 ? (
           <span style={ccV2.emptyHint}>{t('tabs.pickCasesHint')}</span>
@@ -94,7 +94,7 @@ export function CoverageTabsBar({
           ))
         )}
       </div>
-      <div style={ccV2.tabStrip2} role="tablist">
+      <div className="cc-scroll-x" style={ccV2.tabStrip2} role="tablist">
         <span style={ccV2.groupLabel('var(--bt-bowtie-blue)')}>{t('tabs.plans')}</span>
         {activePlans.length === 0 ? (
           <span style={ccV2.emptyHint}>{t('tabs.pickPlansHint')}</span>

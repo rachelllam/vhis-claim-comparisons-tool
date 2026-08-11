@@ -98,7 +98,7 @@ function LeftRail({
   const caseCount = caseProps.selectedCaseIds.length;
 
   return (
-    <div>
+    <div className="cc-rail">
       <div className="cc-rtabbar" role="tablist">
         {SHOW_QUOTES_UI && (
           <button className={'cc-rtab' + (active === 'about' ? ' on' : '')} onClick={() => setActive('about')}>
@@ -130,9 +130,11 @@ function LeftRail({
         </button>
       </div>
 
-      {SHOW_QUOTES_UI && active === 'about' && <YouTabBody {...aboutProps} />}
-      {active === 'configure' && <PlanTab {...configProps} hideHeader />}
-      {active === 'case' && <CaseTab {...caseProps} hideHeader />}
+      <div className="cc-rail-body cc-scroll">
+        {SHOW_QUOTES_UI && active === 'about' && <YouTabBody {...aboutProps} />}
+        {active === 'configure' && <PlanTab {...configProps} hideHeader />}
+        {active === 'case' && <CaseTab {...caseProps} hideHeader />}
+      </div>
     </div>
   );
 }
