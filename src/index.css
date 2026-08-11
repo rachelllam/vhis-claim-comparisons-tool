@@ -232,7 +232,9 @@ body { background: var(--bt-pebble); }
 
 /* — Root shell: fixed viewport, panels scroll independently, page never scrolls — */
 html, body { height: 100%; }
-#root { height: 100vh; display: flex; flex-direction: column; overflow: hidden; zoom: 0.85; }
+/* zoom shrinks #root's own rendered box too, not just its content — compensate
+   the height so the box still paints at exactly 100vh after the 0.85 scale. */
+#root { height: calc(100vh / 0.85); display: flex; flex-direction: column; overflow: hidden; zoom: 0.85; }
 
 /* — Layout — */
 .cc-main {
