@@ -61,8 +61,6 @@ export const ccChartStyles = {
 
 // ── v2 chart styles (ported from cc-chart-panel-v2.jsx ccV2) ──
 export const ccV2 = {
-  dot: (c: string): CSSProperties => ({ width: 9, height: 9, borderRadius: '50%', background: c, flexShrink: 0 }),
-
   // plan/case selector chips
   planChips: { display: 'flex', gap: 8, flexWrap: 'wrap', margin: '4px 0 18px' } as CSSProperties,
   chipWrap: (on: boolean): CSSProperties => ({
@@ -92,7 +90,7 @@ export const ccV2 = {
   groupLabel: (bg: string): CSSProperties => ({ display: 'inline-flex', alignItems: 'center', gap: 5, alignSelf: 'center', margin: '0 8px 5px 2px', padding: '5px 11px', borderRadius: 'var(--bt-radius-pill)', background: bg, color: 'var(--bt-white)', font: '700 11px/1 var(--bt-font)', letterSpacing: '0.02em', whiteSpace: 'nowrap', flexShrink: 0 }),
   emptyHint: { alignSelf: 'center', marginBottom: 6, padding: '0 4px', font: '500 12px/1 var(--bt-font)', color: 'var(--bt-rock)' } as CSSProperties,
   bTab: (on: boolean): CSSProperties => ({
-    position: 'relative', flex: '1 1 0', minWidth: 74, display: 'flex', alignItems: 'center', gap: 7,
+    position: 'relative', flex: '1 1 0', minWidth: 140, display: 'flex', alignItems: 'center', gap: 7,
     cursor: 'pointer', border: 0, background: on ? 'var(--bt-white)' : 'transparent',
     color: 'var(--bt-bowtie-blue)', font: `${on ? 700 : 500} 13px/1 var(--bt-font)`,
     borderRadius: '9px 9px 0 0', padding: '10px 10px 12px', marginBottom: -1,
@@ -116,10 +114,10 @@ export const ccV2 = {
 
   // by-plan case header
   caseHead: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 4 } as CSSProperties,
-  tierBadge: (): CSSProperties => ({
-    display: 'inline-flex', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
+  tierBadge: (color: string): CSSProperties => ({
+    display: 'inline-flex', alignItems: 'center', alignSelf: 'flex-start',
     font: '700 10px/1 var(--bt-font)', letterSpacing: '0.04em', textTransform: 'uppercase',
-    color: 'var(--bt-graphite)', background: 'var(--bt-pebble)', border: '1px solid var(--bt-stone)',
+    color: 'var(--bt-white)', background: color,
     padding: '4px 9px', borderRadius: 'var(--bt-radius-pill)', marginBottom: 8,
   }),
   caseName: { font: '700 16px/1.3 var(--bt-font)', color: 'var(--bt-ink)' } as CSSProperties,

@@ -211,9 +211,8 @@ function CaseHeader({ tier, caseItem, onOpenDetail }: { tier?: SurgeryTier; case
   const official = detail ? pick(detail.official, lang) : '';
   return (
     <div>
-      <span style={ccV2.tierBadge()}>
-        <span style={ccV2.dot(tier ? tier.accent : 'var(--bt-graphite)')}></span>
-        {tier && pick(tier, lang)}
+      <span style={ccV2.tierBadge(tier ? tier.accent : 'var(--bt-graphite)')}>
+        {tier && pick(tier.short, lang)}
       </span>
       <div style={ccV2.caseHead}>
         <div style={{ minWidth: 0 }}>
@@ -256,9 +255,8 @@ function TreatmentHeader({ focusCase, onOpenDetail }: { focusCase: SurgeryCase; 
           <h3 style={ccDetail.thShort}>{pickCaseShort(focusCase, lang)}</h3>
           <div style={ccDetail.thOfficial}>{official && official !== 'N/A' ? official : pickCaseName(focusCase, lang)}</div>
           <div style={{ ...ccDetail.thBadgeRow, marginTop: 10, marginBottom: 0 }}>
-            <span style={ccV2.tierBadge()}>
-              <span style={ccV2.dot(tier ? tier.accent : 'var(--bt-graphite)')}></span>
-              {tier ? t('chart.tierSurgeryTpl').replace('{tier}', pick(tier, lang)) : ''}
+            <span style={ccV2.tierBadge(tier ? tier.accent : 'var(--bt-graphite)')}>
+              {tier ? t('chart.tierSurgeryTpl').replace('{tier}', pick(tier.short, lang)) : ''}
             </span>
           </div>
         </div>
