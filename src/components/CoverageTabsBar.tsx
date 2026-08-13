@@ -77,14 +77,14 @@ export function CoverageTabsBar({
   return (
     <div className="cc-tabsbar-wrap">
       <div className="cc-scroll-x" style={ccV2.tabStrip} role="tablist">
-        <span style={ccV2.groupLabel('var(--bt-bowtie-pink)')}>{t('tabs.cases')}</span>
+        <span style={ccV2.groupLabel('var(--bt-bowtie-blue)')}>{t('tabs.cases')}</span>
         {chosenCases.length === 0 ? (
           <span style={ccV2.emptyHint}>{t('tabs.pickCasesHint')}</span>
         ) : (
           chosenCases.map((c) => (
             <TabBtn
               key={c.id}
-              favColor="var(--bt-bowtie-pink)"
+              favColor="var(--bt-bowtie-blue)"
               icon={caseIcon}
               label={pickCaseShort(c, lang)}
               on={mode === 'case' && c.id === resolvedCaseId}
@@ -95,7 +95,7 @@ export function CoverageTabsBar({
         )}
       </div>
       <div className="cc-scroll-x" style={ccV2.tabStrip2} role="tablist">
-        <span style={ccV2.groupLabel('var(--bt-bowtie-blue)')}>{t('tabs.plans')}</span>
+        <span style={ccV2.groupLabel('var(--bt-bowtie-pink)')}>{t('tabs.plans')}</span>
         {activePlans.length === 0 ? (
           <span style={ccV2.emptyHint}>{t('tabs.pickPlansHint')}</span>
         ) : (
@@ -112,7 +112,7 @@ export function CoverageTabsBar({
             return (
               <TabBtn
                 key={`${p.id}-${p.deductible}`}
-                favColor="var(--bt-bowtie-blue)"
+                favColor="var(--bt-bowtie-pink)"
                 icon={planIcon}
                 label={label}
                 on={mode === 'plan' && p.id === resolvedPlan?.id && p.deductible === resolvedPlan?.deductible}
