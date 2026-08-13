@@ -439,6 +439,8 @@ body {
 .cc-rail-body {
   flex: 1;
   min-height: 0;
+  font-size: 13px;
+  font-weight: 600;
 }
 .cc-panel-tight {
   padding: 20px;
