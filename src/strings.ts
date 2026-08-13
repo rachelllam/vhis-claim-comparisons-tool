@@ -126,6 +126,7 @@ const en = {
   'plan.deductTpl': 'Deduct {amount}',
   'plan.pinkPlan': 'Pink plan',
   'plan.pinkHint': 'Tap ward × deductible to compare',
+  'plan.pinkBulkSuffix': 'Get all quotes',
   'plan.remove': 'Remove',
   'plan.addShort': 'Add to compare',
 
@@ -310,6 +311,7 @@ const zh: Record<StringKey, string> = {
   'plan.deductTpl': '墊底費 {amount}',
   'plan.pinkPlan': '粉紅計劃',
   'plan.pinkHint': '點選病房 × 墊底費作比較',
+  'plan.pinkBulkSuffix': '一鍵取得全系列報價',
   'plan.remove': '移除',
   'plan.addShort': '加入比較',
 

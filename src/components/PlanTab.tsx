@@ -13,8 +13,8 @@ const ccPlanStyles = {
     display: 'flex', alignItems: 'center', gap: 12,
     background: sel ? 'var(--bt-blush)' : 'var(--bt-white)',
     border: `1.5px solid ${sel ? 'var(--bt-bowtie-pink)' : 'var(--bt-stone)'}`,
-    borderRadius: 'var(--bt-radius-m)',
-    padding: '12px 14px', marginBottom: 8,
+    borderRadius: 8,
+    padding: '6px 8px 6px 12px', marginBottom: 8,
     opacity: disabled ? 0.45 : 1,
     transition: 'all var(--bt-duration-fast) var(--bt-ease)',
   }),
@@ -39,15 +39,18 @@ const ccPlanStyles = {
     boxShadow: on ? 'none' : 'inset 0 0 0 1px var(--bt-stone)',
   }),
 
-  // Pink matrix
-  matrix: { border: '1px solid var(--bt-stone)', borderRadius: 'var(--bt-radius-m)', overflow: 'hidden' } as CSSProperties,
-  matrixHead: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, padding: '12px 14px 10px', flexWrap: 'wrap' } as CSSProperties,
+  // Pink matrix ("fp-*" block — bulk row/column select + individual cells)
+  matrix: { background: 'var(--bt-pebble)', border: '1px solid var(--bt-stone)', borderRadius: 'var(--bt-radius-s)', padding: 10, marginTop: 6 } as CSSProperties,
+  matrixHead: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 8, padding: '0 2px', flexWrap: 'wrap' } as CSSProperties,
   matrixTitle: { font: '700 14px/1 var(--bt-font)', color: 'var(--bt-bowtie-blue)' } as CSSProperties,
   matrixHint: { font: '400 11px/1.2 var(--bt-font)', color: 'var(--bt-graphite)' } as CSSProperties,
-  grid: (cols: number): CSSProperties => ({ display: 'grid', gridTemplateColumns: `1.25fr repeat(${cols}, 1fr)`, gap: 1, background: 'var(--bt-stone)' }),
+  grid: (cols: number): CSSProperties => ({
+    display: 'grid', gridTemplateColumns: `1.3fr repeat(${cols}, 1fr)`, gap: 3,
+    background: 'var(--bt-stone)', padding: 1, borderRadius: 'var(--bt-radius-xs)', overflow: 'hidden',
+  }),
   corner: { background: 'var(--bt-pebble)' } as CSSProperties,
-  colHead: { background: 'var(--bt-pebble)', font: '700 12px/1 var(--bt-font)', color: 'var(--bt-bowtie-blue)', textAlign: 'center', padding: '12px 4px' } as CSSProperties,
-  wardHead: { background: 'var(--bt-white)', font: '700 13px/1.2 var(--bt-font)', color: 'var(--bt-bowtie-blue)', display: 'flex', alignItems: 'center', padding: '12px 12px' } as CSSProperties,
+  colHead: { border: 'none', cursor: 'pointer', background: 'var(--bt-pebble)', font: '700 12px/1 var(--bt-font)', color: 'var(--bt-bowtie-blue)', textAlign: 'center', padding: '10px 4px', transition: 'background var(--bt-duration-fast) var(--bt-ease)' } as CSSProperties,
+  wardHead: { border: 'none', cursor: 'pointer', background: 'var(--bt-white)', font: '700 13px/1.2 var(--bt-font)', color: 'var(--bt-bowtie-blue)', display: 'flex', alignItems: 'center', padding: '10px 12px', width: '100%', transition: 'background var(--bt-duration-fast) var(--bt-ease)' } as CSSProperties,
   cell: (sel: boolean, disabled: boolean): CSSProperties => ({
     border: 'none', cursor: disabled ? 'default' : 'pointer',
     background: sel ? 'var(--bt-bowtie-pink)' : 'var(--bt-white)',
@@ -75,6 +78,13 @@ function CCPlanPicker({ selected, onAdd, onRemove, onSetDeductible, onSelectPink
   const pinkPlans = VHIS_PLANS.filter((p) => p.id.startsWith('pink'));
   const pinkDeductibles = pinkPlans[0] ? pinkPlans[0].deductibles : [];
   const findSel = (id: string) => selected.find((sp) => sp.id === id);
+  const isPinkSel = (id: string, d: number) => selected.some((sp) => sp.id === id && sp.deductible === d);
+  // Row/column header "one-click get the whole series" — additive only, never
+  // deselects a cell that's already picked.
+  const selectWard = (id: string, deductibles: number[]) =>
+    deductibles.forEach((d) => { if (!isPinkSel(id, d)) onSelectPink(id, d); });
+  const selectDeductible = (d: number) =>
+    pinkPlans.forEach((plan) => { if (!isPinkSel(plan.id, d)) onSelectPink(plan.id, d); });
 
   return (
     <div>
@@ -128,26 +138,42 @@ function CCPlanPicker({ selected, onAdd, onRemove, onSetDeductible, onSelectPink
           <span style={ccPlanStyles.matrixHint}>{t('plan.pinkHint')}</span>
         </div>
         <div style={ccPlanStyles.grid(pinkDeductibles.length)}>
-          <div style={ccPlanStyles.corner}></div>
+          <div style={ccPlanStyles.corner} aria-hidden="true"></div>
           {pinkDeductibles.map((d) => (
-            <div key={'h' + d} style={ccPlanStyles.colHead}>
+            <button
+              key={'h' + d}
+              type="button"
+              style={ccPlanStyles.colHead}
+              title={`${dedColLabel(d)} · ${t('plan.pinkBulkSuffix')}`}
+              onClick={() => selectDeductible(d)}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bt-stone)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bt-pebble)'; }}
+            >
               {dedColLabel(d)}
-            </div>
+            </button>
           ))}
           {pinkPlans.map((plan) => {
             return (
               <Fragment key={plan.id}>
-                <div style={{ ...ccPlanStyles.wardHead, flexDirection: 'column', alignItems: 'flex-start', gap: 3, justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  style={{ ...ccPlanStyles.wardHead, flexDirection: 'column', alignItems: 'flex-start', gap: 3, justifyContent: 'center' }}
+                  title={`${wardLabel(plan.ward, t)} · ${t('plan.pinkBulkSuffix')}`}
+                  onClick={() => selectWard(plan.id, plan.deductibles)}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bt-pebble)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bt-white)'; }}
+                >
                   <span>{wardLabel(plan.ward, t)}</span>
                   {showQuote && <PremiumBadge planId={plan.id} profile={quoteCtx.profile} style={{ font: '700 11px/1 var(--bt-font)' }} />}
-                </div>
+                </button>
                 {pinkDeductibles.map((d) => {
                   // Multi-select: any number of deductible tiers per ward can be active at once.
-                  const isSel = selected.some((sp) => sp.id === plan.id && sp.deductible === d);
+                  const isSel = isPinkSel(plan.id, d);
                   return (
                     <button
                       key={plan.id + d}
-                      style={ccPlanStyles.cell(!!isSel, false)}
+                      type="button"
+                      style={ccPlanStyles.cell(isSel, false)}
                       title={`${wardLabel(plan.ward, t)} · ${dedColLabel(d)}`}
                       onClick={() => onSelectPink(plan.id, d)}
                     >
