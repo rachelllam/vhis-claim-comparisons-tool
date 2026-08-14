@@ -85,8 +85,8 @@ export const ccV2 = {
   }),
 
   // browser-tab lens
-  tabStrip: { display: 'flex', alignItems: 'flex-end', gap: 0, background: 'var(--bt-blush)', padding: '6px 6px 0' } as CSSProperties,
-  tabStrip2: { display: 'flex', alignItems: 'flex-end', gap: 0, background: 'var(--bt-blush)', padding: '6px 6px 0', borderTop: '1px solid rgba(255,0,104,0.10)' } as CSSProperties,
+  tabStrip: { display: 'flex', alignItems: 'flex-end', gap: 0, background: 'var(--bt-blush)', padding: '10px 6px 0' } as CSSProperties,
+  tabStrip2: { display: 'flex', alignItems: 'flex-end', gap: 0, background: 'var(--bt-blush)', padding: '10px 6px 0', borderTop: '1px solid rgba(255,0,104,0.10)' } as CSSProperties,
   groupLabel: (bg: string): CSSProperties => ({ display: 'inline-flex', alignItems: 'center', gap: 5, alignSelf: 'center', margin: '0 8px 5px 2px', padding: '5px 11px', borderRadius: 'var(--bt-radius-pill)', background: bg, color: 'var(--bt-white)', font: '700 11px/1 var(--bt-font)', letterSpacing: '0.02em', whiteSpace: 'nowrap', flexShrink: 0 }),
   emptyHint: { alignSelf: 'center', marginBottom: 6, padding: '0 4px', font: '500 12px/1 var(--bt-font)', color: 'var(--bt-rock)' } as CSSProperties,
   bTab: (on: boolean): CSSProperties => ({

@@ -333,14 +333,21 @@ html,
 body {
   height: 100%;
 }
-/* zoom shrinks #root's own rendered box too, not just its content — compensate
-   the height so the box still paints at exactly 100vh after the 0.85 scale. */
+/* Baseline: fixed viewport even in browsers without `zoom` support (e.g. Firefox < 126). */
 #root {
-  height: calc(100vh / 0.85);
+  height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  zoom: 0.85;
+}
+/* Density tweak — `zoom` is non-standard, so gate it behind a feature check.
+   It also shrinks #root's own rendered box, not just its content — compensate
+   the height so the box still paints at exactly 100vh after the 0.85 scale. */
+@supports (zoom: 1) {
+  #root {
+    height: calc(100vh / 0.85);
+    zoom: 0.85;
+  }
 }
 
 /* — Layout — */
@@ -668,7 +675,7 @@ body {
   align-items: flex-end;
   background: var(--bt-blush);
   padding: 8px 8px 0;
-  margin: -24px -24px 20px;
+  margin: -16px -16px 20px;
   border-radius: var(--bt-radius-m) var(--bt-radius-m) 0 0;
   flex: none;
 }
