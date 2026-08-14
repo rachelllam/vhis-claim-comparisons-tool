@@ -50,10 +50,12 @@ const en = {
   "gate.retry": "Retry",
 
   // ── coverage chart ──
-  "chart.title": "Coverage breakdown",
+  "chart.title": "Surgery Payout Estimator",
   "chart.splitBill": "How each plan splits the bill",
   "chart.holdsUpTpl": "How {plan} holds up across surgeries",
   "chart.holdsUpGeneric": "How one plan holds up across surgeries",
+  "chart.estimateDisclaimer":
+    "Figures are estimates for operation-related benefits only, meant to help you compare plans at a glance. For exact coverage or an actual claim, please refer to the benefit schedule.",
   "chart.pickCasesTitle": "Pick cases to compare",
   "chart.pickCasesSub": "Choose surgeries in the Case tab on the left",
   "chart.pickPlansTitle": "Pick VHIS plans",
@@ -188,6 +190,8 @@ const en = {
   "msg.calculating": "(calculating…)",
   "msg.unavailable": "(coverage unavailable)",
   "msg.fullyCovered": "  — fully covered",
+  "msg.estimateDisclaimer":
+    "Please note: these figures are for reference only and cover operation-related benefits, just to help you compare plans at a glance. For your exact coverage or an actual claim, please refer to the benefit schedule.",
   "msg.closing":
     "Let me know if you have any questions — happy to walk through it.",
   "msg.greetingPlanTpl":
@@ -239,10 +243,12 @@ const zh: Record<StringKey, string> = {
   "gate.retry": "重試",
 
   // ── coverage chart ──
-  "chart.title": "保障分析",
+  "chart.title": "手術費賠償試算",
   "chart.splitBill": "各計劃如何分擔費用",
   "chart.holdsUpTpl": "{plan} 在不同手術下的保障表現",
   "chart.holdsUpGeneric": "單一計劃在不同手術下的保障表現",
+  "chart.estimateDisclaimer":
+    "以上金額僅供參考，只計算手術相關保障，快速了解不同計劃的保障差異；實際保障或索償金額，請以保障表為準。",
   "chart.pickCasesTitle": "選擇要比較的個案",
   "chart.pickCasesSub": "在左方「個案」分頁選擇手術",
   "chart.pickPlansTitle": "選擇自願醫保計劃",
@@ -375,6 +381,8 @@ const zh: Record<StringKey, string> = {
   "msg.calculating": "（計算中…）",
   "msg.unavailable": "（保障資料暫時無法計算）",
   "msg.fullyCovered": "  — 全數保障",
+  "msg.estimateDisclaimer":
+    "溫馨提示：以上金額僅供參考，只計算手術相關保障，快速了解不同計劃的保障差異。實際保障或索償金額，請以保障表為準。",
   "msg.closing": "如有任何疑問，歡迎隨時聯絡我們了解詳情。",
   "msg.greetingPlanTpl": "你好！以下是 {plan} 在不同手術下的保障：",
   "msg.plan": "計劃：",

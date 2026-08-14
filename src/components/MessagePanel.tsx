@@ -89,6 +89,8 @@ function buildByCase({
       lines.push(...payoutLines(state, caseItem.tier, caseItem.cost, t));
     });
     lines.push('');
+    lines.push(t('msg.estimateDisclaimer'));
+    lines.push('');
   }
   lines.push(t('msg.closing'));
   return lines.join('\n');
@@ -129,6 +131,8 @@ function buildByPlan({
       lines.push(`  • ${tierName} — ${pickCaseName(c, lang)} (${fmtHK(c.cost)})`);
       lines.push(...payoutLines(state, c.tier, c.cost, t));
     });
+    lines.push('');
+    lines.push(t('msg.estimateDisclaimer'));
     lines.push('');
   }
   lines.push(t('msg.closing'));
