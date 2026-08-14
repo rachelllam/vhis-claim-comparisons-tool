@@ -1,4 +1,4 @@
-import { VHIS_PLANS, casesFromIds, fmtHK } from '../data';
+import { VHIS_PLANS, SURGERY_TIERS, casesFromIds, fmtHK } from '../data';
 import { useOperationData } from '../useOperationData';
 import { useLang, pick, pickCaseShort } from '../i18n';
 import type { SelectedPlan, CoverageView } from '../types';
@@ -75,27 +75,31 @@ export function CoverageTabsBar({
     </button>
   );
   return (
-    <div>
-      <div style={ccV2.tabStrip} role="tablist">
-        <span style={ccV2.groupLabel('var(--bt-bowtie-pink)')}>{t('tabs.cases')}</span>
+    <div className="cc-tabsbar-wrap">
+      <div className="cc-scroll-x" style={ccV2.tabStrip} role="tablist">
+        <span style={ccV2.groupLabel('var(--bt-bowtie-blue)')}>{t('tabs.cases')}</span>
         {chosenCases.length === 0 ? (
           <span style={ccV2.emptyHint}>{t('tabs.pickCasesHint')}</span>
         ) : (
-          chosenCases.map((c) => (
-            <TabBtn
-              key={c.id}
-              favColor="var(--bt-bowtie-pink)"
-              icon={caseIcon}
-              label={pickCaseShort(c, lang)}
-              on={mode === 'case' && c.id === resolvedCaseId}
-              onClick={() => { setMode('case'); cv.setFocusCaseId(c.id); }}
-              onClose={() => onRemoveCase(c.id)}
-            />
-          ))
+          chosenCases.map((c) => {
+            const tier = SURGERY_TIERS.find((x) => x.id === c.tier);
+            const label = tier ? `${pick(tier.short, lang)} · ${pickCaseShort(c, lang)}` : pickCaseShort(c, lang);
+            return (
+              <TabBtn
+                key={c.id}
+                favColor={tier ? tier.accent : 'var(--bt-bowtie-blue)'}
+                icon={caseIcon}
+                label={label}
+                on={mode === 'case' && c.id === resolvedCaseId}
+                onClick={() => { setMode('case'); cv.setFocusCaseId(c.id); }}
+                onClose={() => onRemoveCase(c.id)}
+              />
+            );
+          })
         )}
       </div>
-      <div style={ccV2.tabStrip2} role="tablist">
-        <span style={ccV2.groupLabel('var(--bt-bowtie-blue)')}>{t('tabs.plans')}</span>
+      <div className="cc-scroll-x" style={ccV2.tabStrip2} role="tablist">
+        <span style={ccV2.groupLabel('var(--bt-bowtie-pink)')}>{t('tabs.plans')}</span>
         {activePlans.length === 0 ? (
           <span style={ccV2.emptyHint}>{t('tabs.pickPlansHint')}</span>
         ) : (
@@ -112,7 +116,7 @@ export function CoverageTabsBar({
             return (
               <TabBtn
                 key={`${p.id}-${p.deductible}`}
-                favColor="var(--bt-bowtie-blue)"
+                favColor="var(--bt-bowtie-pink)"
                 icon={planIcon}
                 label={label}
                 on={mode === 'plan' && p.id === resolvedPlan?.id && p.deductible === resolvedPlan?.deductible}
