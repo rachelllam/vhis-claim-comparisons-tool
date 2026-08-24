@@ -271,6 +271,15 @@ export const fmtHKShort = (n: number): string => {
   return 'HK$' + n;
 };
 
+// 萬-scale money for Chinese prose — "HK$1,000萬" is how Hong Kong reads a
+// HK$10M ceiling. Only for round multiples of 萬: anything else (or anything
+// smaller) is clearer in full, and rounding a real payout would be misleading.
+export const fmtHKWan = (n: number): string => {
+  n = Math.floor(n || 0);
+  if (n < 10000 || n % 10000 !== 0) return fmtHK(n);
+  return 'HK$' + (n / 10000).toLocaleString('en-US') + '萬';
+};
+
 // One representative case per tier (median cost) for the "by plan" coverage curve.
 export function repCasesByTier(cases: SurgeryCase[]): { tier: SurgeryTier; caseItem: SurgeryCase }[] {
   return SURGERY_TIERS.map((t) => {

@@ -1,9 +1,10 @@
 // Right panel — WhatsApp message composer, adapts to "By case" / "By plan".
 import { useState, useMemo, useEffect } from 'react';
 import type { CSSProperties } from 'react';
-import { SURGERY_TIERS, VHIS_PLANS, fmtHK, fmtHKShort, tierIndex } from '../data';
+import { SURGERY_TIERS, VHIS_PLANS, fmtHK, fmtHKShort, fmtHKWan, tierIndex } from '../data';
 import type { SurgeryCase, VhisPlan } from '../data';
-import { computeSurgeryPayout } from '../benefitSchedule';
+import { computeSurgeryPayout, isFlexiPremium, smmTerms } from '../benefitSchedule';
+import type { BenefitSchedule } from '../benefitSchedule';
 import { useBenefitSchedules, scheduleKey } from '../useBenefitSchedule';
 import type { BenefitScheduleState } from '../useBenefitSchedule';
 import { useOperationData } from '../useOperationData';
@@ -30,45 +31,34 @@ const ccMsgStylesV2 = {
   } as CSSProperties,
 };
 
-const capLabelMsg = (plan: VhisPlan, t: T) =>
-  plan.perSurgery >= 999999 ? t('common.noCap') : t('msg.perSurgeryCapTpl').replace('{amount}', fmtHKShort(plan.perSurgery));
-
-// One "vhisPays"/"youPay" pair — real numbers once the schedule resolves, an
-// inline placeholder line while it's loading or if it failed.
-function payoutLines(
+// One payout block — shows the working, not just the total: the base surgical
+// caps, the SMM top-up, then the total with its share of the bill. Flexi Premium
+// ("Pink") has no per-fee split to show (one combined deductible + percentage
+// rule), so it gets the last two lines only.
+//
+// `inlineBase` picks between the two base-benefit labels: "By case" spells out
+// what the base covers (the reader is weighing plans against each other and the
+// summary block isn't there to explain it), "By plan" uses the short label.
+function payoutBlockLines(
   state: BenefitScheduleState | undefined,
   tier: SurgeryCase['tier'],
   cost: number,
   t: T,
-): string[] {
-  if (state?.schedule) {
-    const payout = computeSurgeryPayout(state.schedule, tier, cost);
-    return [
-      `    ${t('msg.vhisPays')}${fmtHK(payout.covered)}`,
-      `    ${t('msg.youPay')}${fmtHK(payout.customerPays)}${payout.customerPays === 0 ? t('msg.fullyCovered') : ''}`,
-    ];
-  }
-  return [`    ${state?.error ? t('msg.unavailable') : t('msg.calculating')}`];
-}
-
-// One plan's block body for "By case" — shows the working, not just the total:
-// the base surgical caps, the SMM top-up, then the total with its share of the
-// bill. Flexi Premium ("Pink") has no per-fee split to show (one combined
-// deductible + percentage rule), so it gets the last two lines only.
-function planBlockLines(
-  state: BenefitScheduleState | undefined,
-  tier: SurgeryCase['tier'],
-  cost: number,
-  t: T,
+  inlineBase: boolean,
 ): string[] {
   if (!state?.schedule) return [state?.error ? t('msg.unavailable') : t('msg.calculating')];
   const payout = computeSurgeryPayout(state.schedule, tier, cost);
   const lines: string[] = [];
   if (payout.fees.itemized) {
     const { surgeon, anaesthetist, theatre } = payout.fees;
-    // Label on its own line — too long to sit beside the amount on a phone.
-    lines.push(t('msg.baseBenefit'));
-    lines.push(fmtHK(surgeon + anaesthetist + theatre));
+    const base = fmtHK(surgeon + anaesthetist + theatre);
+    if (inlineBase) {
+      lines.push(`${t('msg.baseBenefitInline')}${base}`);
+    } else {
+      // Label on its own line — too long to sit beside the amount on a phone.
+      lines.push(t('msg.baseBenefit'));
+      lines.push(base);
+    }
     // Standard carries no SMM rider; an "SMM: HK$0" line would only confuse.
     if (payout.smm > 0) lines.push(`${t('msg.smmBenefit')}${fmtHK(payout.smm)}`);
   }
@@ -79,6 +69,60 @@ function planBlockLines(
     t('msg.totalPaidTpl').replace('{amount}', fmtHK(payout.covered)).replace('{note}', `${pct}%${reason}`),
   );
   lines.push(`${t('msg.oopAmount')}${fmtHK(payout.customerPays)}`);
+  return lines;
+}
+
+// Annual (and, where the schedule has one, lifetime) ceiling — 萬-scale in
+// Chinese, K/M in English.
+function ceilingLabel(schedule: BenefitSchedule, lang: Lang, t: T): string {
+  const money = (n: number) => (lang === 'zh' ? fmtHKWan(n) : fmtHKShort(n));
+  const annual = t('msg.limitAnnualTpl').replace('{amount}', money(schedule.annual_limit));
+  if (schedule.lifetime_limit == null) return annual;
+  return (
+    annual + t('msg.limitSep') + t('msg.limitLifetimeTpl').replace('{amount}', money(schedule.lifetime_limit))
+  );
+}
+
+// The plan's own terms, for "By plan": what it costs before the plan pays, how
+// it pays, and the ward class those terms assume. The deductible comes from the
+// selection so it shows immediately; the rest waits on the schedule.
+function planSummaryLines(
+  state: BenefitScheduleState | undefined,
+  planDef: VhisPlan,
+  deductible: number,
+  lang: Lang,
+  t: T,
+): string[] {
+  const lines = [
+    `${t('msg.deductible')}${deductible === 0 ? t('common.none') : fmtHK(deductible)}`,
+  ];
+  if (!state?.schedule) {
+    lines.push(state?.error ? t('msg.unavailable') : t('msg.calculating'));
+    return lines;
+  }
+  const schedule = state.schedule;
+  if (isFlexiPremium(schedule)) {
+    lines.push(`${t('msg.payoutMethod')}${t('msg.methodPremium')}`);
+    lines.push(`${t('msg.coverageCeiling')}${ceilingLabel(schedule, lang, t)}`);
+    lines.push(`${t('msg.ward')}${wardLabel(planDef.ward, t)}`);
+    return lines;
+  }
+  const { factorPct, annualLimit } = smmTerms(schedule);
+  const hasSmm = factorPct > 0 && annualLimit > 0;
+  lines.push(
+    `${t('msg.payoutMethod')}${
+      hasSmm ? t('msg.methodTieredSmmTpl').replace('{pct}', String(factorPct)) : t('msg.methodTiered')
+    }`,
+  );
+  if (hasSmm) {
+    // The SMM ceiling gets its own line rather than a parenthetical — it's the
+    // number that decides whether a large bill is actually covered.
+    lines.push(t('msg.smmCeilingTpl').replace('{amount}', fmtHK(annualLimit)));
+    // On a tiered plan the ward class only governs the SMM top-up, so name it as
+    // such — and drop the line entirely without an SMM rider (VHIS Standard),
+    // where nothing about the surgical payout turns on the ward.
+    lines.push(`${t('msg.wardSmm')}${wardLabel(planDef.ward, t)}`);
+  }
   return lines;
 }
 
@@ -122,7 +166,7 @@ function buildByCase({
           : '';
       lines.push('');
       lines.push(blockHeading(`${pick(planDef, lang)}${suffix}`, t));
-      lines.push(...planBlockLines(state, caseItem.tier, caseItem.cost, t));
+      lines.push(...payoutBlockLines(state, caseItem.tier, caseItem.cost, t, false));
     });
     lines.push('');
     lines.push(t('msg.estimateDisclaimer'));
@@ -149,28 +193,37 @@ function buildByPlan({
   t: T;
 }): string {
   if (!focusDef || !focus) return '';
-  const planName = pick(focusDef, lang);
+  const state = scheduleMap.get(scheduleKey(focus.id, focus.deductible));
   const lines: string[] = [];
-  lines.push(t('msg.greetingPlanTpl').replace('{plan}', planName));
+  lines.push(t('msg.headerCompareCases'));
   lines.push('');
-  lines.push(`${t('msg.plan')}${planName}`);
-  lines.push(`${t('msg.deductible')}${focus.deductible === 0 ? t('common.none') : fmtHK(focus.deductible)}`);
-  lines.push(`${t('msg.perSurgeryLimit')}${capLabelMsg(focusDef, t)}`);
-  lines.push(`${t('msg.ward')}${wardLabel(focusDef.ward, t)}`);
-  lines.push('');
+  // Only plans that actually offer a deductible choice name it in the header;
+  // the ones fixed at HK$0 would just add noise. (Same rule as "By case".)
+  const suffix =
+    focusDef.deductibles.length > 1
+      ? t('msg.deductibleSuffixTpl').replace('{amount}', fmtHK(focus.deductible))
+      : '';
+  lines.push(blockHeading(`${pick(focusDef, lang)}${suffix}`, t));
+  lines.push(...planSummaryLines(state, focusDef, focus.deductible, lang, t));
   if (cases.length > 0) {
-    lines.push(t('msg.coverageBySurgery'));
-    const state = scheduleMap.get(scheduleKey(focus.id, focus.deductible));
     cases.forEach((c) => {
       const tier = SURGERY_TIERS.find((x) => x.id === c.tier);
-      const tierName = tier ? pick(tier, lang) : '';
-      lines.push(`  • ${tierName} — ${pickCaseName(c, lang)} (${fmtHK(c.cost)})`);
-      lines.push(...payoutLines(state, c.tier, c.cost, t));
+      // `short` ("小型"), not `zh` ("小手術") — the template appends 手術 / "surgery".
+      const tierName = tier ? t('msg.tierSurgeryTpl').replace('{tier}', pick(tier.short, lang)) : '';
+      lines.push('');
+      lines.push(
+        blockHeading(
+          t('msg.caseBlockTpl').replace('{tier}', tierName).replace('{name}', pickCaseName(c, lang)),
+          t,
+        ),
+      );
+      lines.push(`${t('msg.surgeryCostEst')}${fmtHK(c.cost)}`);
+      lines.push(...payoutBlockLines(state, c.tier, c.cost, t, true));
     });
     lines.push('');
     lines.push(t('msg.estimateDisclaimer'));
-    lines.push('');
   }
+  lines.push('');
   lines.push(t('msg.closing'));
   return lines.join('\n');
 }
