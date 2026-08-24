@@ -327,6 +327,16 @@ function Legend({ showDeductible }: { showDeductible?: boolean }) {
   );
 }
 
+// ── Disclaimer ──
+function WarningBox() {
+  const { t } = useLang();
+  return (
+    <div style={ccChartStyles.warningBox}>
+      <span style={ccChartStyles.warningText}>{t('chart.estimateDisclaimer')}</span>
+    </div>
+  );
+}
+
 // ── Main panel ──
 export function ChartPanel({
   plans,
@@ -381,6 +391,7 @@ export function ChartPanel({
         <Legend showDeductible={activePlans.some((p) => p.deductible > 0)} />
 
         {activePlans.length === 0 && <PromptBox title={t('chart.pickPlansTitle')} sub={t('chart.pickPlansSub')} />}
+        {activePlans.length > 0 && <WarningBox />}
         {activePlans.map((p, i) => {
           const planDef = VHIS_PLANS.find((v) => v.id === p.id)!;
           return (
@@ -440,6 +451,7 @@ export function ChartPanel({
           </div>
 
           {chosenCases.length === 0 && <PromptBox title={t('chart.pickCasesTitle')} sub={t('chart.pickCasesSub')} />}
+          {chosenCases.length > 0 && <WarningBox />}
           {chosenCases.map((c) => {
             const tier = SURGERY_TIERS.find((t) => t.id === c.tier);
             return (

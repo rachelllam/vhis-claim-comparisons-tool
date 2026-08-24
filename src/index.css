@@ -72,6 +72,7 @@
   --bt-hotel-california: #f05f00; /* Error / destructive. */
   --bt-hotel-california-light: #feefe6;
   --bt-yellow-submarine: #ffaa00; /* Warning. */
+  --bt-yellow-submarine-light: #fff7e6;
 
   /* ——— Transparencies ——— */
   --bt-ink-50: rgba(42, 46, 66, 0.5);
@@ -97,6 +98,7 @@
   --bt-bg-negative-dark: var(--bt-hotel-california);
   --bt-bg-negative-light: var(--bt-hotel-california-light);
   --bt-bg-warning: var(--bt-yellow-submarine);
+  --bt-bg-warning-light: var(--bt-yellow-submarine-light);
 
   --bt-text-primary: var(--bt-ink);
   --bt-text-secondary: var(--bt-graphite);
