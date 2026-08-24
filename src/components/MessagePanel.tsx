@@ -93,8 +93,12 @@ function planSummaryLines(
   lang: Lang,
   t: T,
 ): string[] {
+  // "無" reads better than "HK$0" for a plan with no deductible to choose — but
+  // where the block header above names the tier ("：HK$0自付費"), this line has to
+  // agree with it rather than contradict it two lines later.
+  const namesItsTier = planDef.deductibles.length > 1;
   const lines = [
-    `${t('msg.deductible')}${deductible === 0 ? t('common.none') : fmtHK(deductible)}`,
+    `${t('msg.deductible')}${deductible === 0 && !namesItsTier ? t('common.none') : fmtHK(deductible)}`,
   ];
   if (!state?.schedule) {
     lines.push(state?.error ? t('msg.unavailable') : t('msg.calculating'));
