@@ -178,12 +178,22 @@ const en = {
   "msg.copy": "Copy",
 
   // ── message panel: generated WhatsApp body ──
-  "msg.greetingCase":
-    "Hi! Here’s a quick example of what your surgery could cost:",
+  "msg.headerCompare": "🔎 Coverage comparison 🔎",
+  // Block heading wrapper — full-width 【】 in zh, plain brackets in en.
+  "msg.blockTpl": "[{label}]",
+  "msg.exampleLabel": "Example",
   "msg.procedure": "Procedure: ",
-  "msg.estTotal": "Estimated total: ",
-  "msg.refProfile": "Reference profile: ",
-  "msg.comparison": "VHIS plan comparison:",
+  "msg.surgeryType": "Surgery type: ",
+  "msg.surgeryCostEst": "Estimated surgery cost: ",
+  "msg.tierSurgeryTpl": "{tier} surgery",
+  "msg.baseBenefit": "Base benefit (surgeon + anaesthetist + theatre):",
+  "msg.smmBenefit": "SMM benefit: ",
+  // {note} always carries at least the covered percentage, so the brackets are
+  // never empty — hence one template rather than an optional suffix.
+  "msg.totalPaidTpl": "Total paid: {amount} ({note})",
+  "msg.oopAmount": "You pay: ",
+  "msg.deductibleSuffixTpl": ": {amount} deductible",
+  "msg.belowDeductible": ", below the deductible",
   "msg.deductible": "Deductible: ",
   "msg.vhisPays": "VHIS pays: ",
   "msg.youPay": "You pay: ",
@@ -191,9 +201,9 @@ const en = {
   "msg.unavailable": "(coverage unavailable)",
   "msg.fullyCovered": "  — fully covered",
   "msg.estimateDisclaimer":
-    "Please note: these figures are for reference only and cover operation-related benefits, just to help you compare plans at a glance. For your exact coverage or an actual claim, please refer to the benefit schedule.",
+    "Please note: these figures are for reference only and cover operation-related benefits, to help you compare plans at a glance. Actual claim amounts follow the benefit schedule.",
   "msg.closing":
-    "Let me know if you have any questions — happy to walk through it.",
+    "Let me know if you have any questions — happy to walk through it 😊",
   "msg.greetingPlanTpl":
     "Hi! Here’s how {plan} would cover you across different surgeries:",
   "msg.plan": "Plan: ",
@@ -370,11 +380,19 @@ const zh: Record<StringKey, string> = {
   "msg.copy": "複製",
 
   // ── message panel: generated WhatsApp body ──
-  "msg.greetingCase": "你好！以下是這項手術的預計費用參考：",
+  "msg.headerCompare": "🔎 不同計劃賠償比較 🔎",
+  "msg.blockTpl": "【{label}】",
+  "msg.exampleLabel": "例子",
   "msg.procedure": "手術：",
-  "msg.estTotal": "預計總額：",
-  "msg.refProfile": "參考資料：",
-  "msg.comparison": "自願醫保計劃比較：",
+  "msg.surgeryType": "手術類型：",
+  "msg.surgeryCostEst": "手術費估算：",
+  "msg.tierSurgeryTpl": "{tier}手術",
+  "msg.baseBenefit": "基本保額賠償（外科醫生＋麻醉科＋手術室費）：",
+  "msg.smmBenefit": "額外醫療保障（SMM）賠償：",
+  "msg.totalPaidTpl": "共賠償：{amount}（{note}）",
+  "msg.oopAmount": "自付金額：",
+  "msg.deductibleSuffixTpl": "：{amount}自付費",
+  "msg.belowDeductible": "，醫療費用未過自付費",
   "msg.deductible": "自付費：",
   "msg.vhisPays": "自願醫保賠償：",
   "msg.youPay": "你需支付：",
@@ -382,8 +400,8 @@ const zh: Record<StringKey, string> = {
   "msg.unavailable": "（保障資料暫時無法計算）",
   "msg.fullyCovered": "  — 全數保障",
   "msg.estimateDisclaimer":
-    "溫馨提示：以上金額僅供參考，只計算手術相關保障，快速了解不同計劃的保障差異。實際保障或索償金額，請以保障表為準。",
-  "msg.closing": "如有任何疑問，歡迎隨時聯絡我們了解詳情。",
+    "溫馨提示：以上金額僅供參考，只計算手術相關保障，以快速比較不同計劃的保障差異。實際賠償金額以保障表為準。",
+  "msg.closing": "如有任何疑問，歡迎隨時聯絡我們了解更多 😊",
   "msg.greetingPlanTpl": "你好！以下是 {plan} 在不同手術下的保障：",
   "msg.plan": "計劃：",
   "msg.perSurgeryLimit": "每次手術上限：",

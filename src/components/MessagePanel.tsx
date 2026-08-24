@@ -30,9 +30,6 @@ const ccMsgStylesV2 = {
   } as CSSProperties,
 };
 
-const genderLabelMsg = (gender: string, t: T) =>
-  gender === 'male' ? t('common.male') : gender === 'female' ? t('common.female') : t('common.any');
-const ageLabelMsg = (age: string, t: T) => (age === 'all' ? t('common.anyAge') : age);
 const capLabelMsg = (plan: VhisPlan, t: T) =>
   plan.perSurgery >= 999999 ? t('common.noCap') : t('msg.perSurgeryCapTpl').replace('{amount}', fmtHKShort(plan.perSurgery));
 
@@ -54,6 +51,40 @@ function payoutLines(
   return [`    ${state?.error ? t('msg.unavailable') : t('msg.calculating')}`];
 }
 
+// One plan's block body for "By case" — shows the working, not just the total:
+// the base surgical caps, the SMM top-up, then the total with its share of the
+// bill. Flexi Premium ("Pink") has no per-fee split to show (one combined
+// deductible + percentage rule), so it gets the last two lines only.
+function planBlockLines(
+  state: BenefitScheduleState | undefined,
+  tier: SurgeryCase['tier'],
+  cost: number,
+  t: T,
+): string[] {
+  if (!state?.schedule) return [state?.error ? t('msg.unavailable') : t('msg.calculating')];
+  const payout = computeSurgeryPayout(state.schedule, tier, cost);
+  const lines: string[] = [];
+  if (payout.fees.itemized) {
+    const { surgeon, anaesthetist, theatre } = payout.fees;
+    // Label on its own line — too long to sit beside the amount on a phone.
+    lines.push(t('msg.baseBenefit'));
+    lines.push(fmtHK(surgeon + anaesthetist + theatre));
+    // Standard carries no SMM rider; an "SMM: HK$0" line would only confuse.
+    if (payout.smm > 0) lines.push(`${t('msg.smmBenefit')}${fmtHK(payout.smm)}`);
+  }
+  const pct = cost > 0 ? ((payout.covered / cost) * 100).toFixed(1) : '0.0';
+  // A Pink plan whose deductible swallowed the whole bill pays nothing — say why.
+  const reason = payout.covered === 0 && payout.deductible > 0 ? t('msg.belowDeductible') : '';
+  lines.push(
+    t('msg.totalPaidTpl').replace('{amount}', fmtHK(payout.covered)).replace('{note}', `${pct}%${reason}`),
+  );
+  lines.push(`${t('msg.oopAmount')}${fmtHK(payout.customerPays)}`);
+  return lines;
+}
+
+// 【…】 in zh, […] in en — the bracket style belongs to the language, not here.
+const blockHeading = (label: string, t: T) => t('msg.blockTpl').replace('{label}', label);
+
 // ── By case: one surgery, many plans ──
 function buildByCase({
   caseItem,
@@ -71,27 +102,32 @@ function buildByCase({
   if (!caseItem) return '';
   const activePlans = plans.filter(Boolean);
   const lines: string[] = [];
-  lines.push(t('msg.greetingCase'));
+  lines.push(t('msg.headerCompare'));
   lines.push('');
   const tier = SURGERY_TIERS.find((x) => x.id === caseItem.tier);
-  const tierName = tier ? pick(tier, lang) : '';
-  lines.push(`${t('msg.procedure')}${tierName} — ${pickCaseName(caseItem, lang)}`);
-  lines.push(`${t('msg.estTotal')}${fmtHK(caseItem.cost)}`);
-  lines.push(`${t('msg.refProfile')}${genderLabelMsg(caseItem.gender, t)} · ${ageLabelMsg(caseItem.age, t)}`);
-  lines.push('');
+  lines.push(blockHeading(t('msg.exampleLabel'), t));
+  lines.push(`${t('msg.procedure')}${pickCaseName(caseItem, lang)}`);
+  // `short` ("小型"), not `zh` ("小手術") — the template appends 手術 / "surgery".
+  if (tier) lines.push(`${t('msg.surgeryType')}${t('msg.tierSurgeryTpl').replace('{tier}', pick(tier.short, lang))}`);
+  lines.push(`${t('msg.surgeryCostEst')}${fmtHK(caseItem.cost)}`);
   if (activePlans.length > 0) {
-    lines.push(t('msg.comparison'));
     activePlans.forEach((p) => {
       const planDef = VHIS_PLANS.find((v) => v.id === p.id)!;
       const state = scheduleMap.get(scheduleKey(p.id, p.deductible));
-      lines.push(`  • ${pick(planDef, lang)}`);
-      lines.push(`    ${t('msg.deductible')}${p.deductible === 0 ? t('common.none') : fmtHK(p.deductible)}`);
-      lines.push(...payoutLines(state, caseItem.tier, caseItem.cost, t));
+      // Only plans that actually offer a deductible choice name it in the
+      // header; the ones fixed at HK$0 would just add noise.
+      const suffix =
+        planDef.deductibles.length > 1
+          ? t('msg.deductibleSuffixTpl').replace('{amount}', fmtHK(p.deductible))
+          : '';
+      lines.push('');
+      lines.push(blockHeading(`${pick(planDef, lang)}${suffix}`, t));
+      lines.push(...planBlockLines(state, caseItem.tier, caseItem.cost, t));
     });
     lines.push('');
     lines.push(t('msg.estimateDisclaimer'));
-    lines.push('');
   }
+  lines.push('');
   lines.push(t('msg.closing'));
   return lines.join('\n');
 }
