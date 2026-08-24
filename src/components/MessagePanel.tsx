@@ -8,7 +8,7 @@ import type { BenefitSchedule } from '../benefitSchedule';
 import { useBenefitSchedules, scheduleKey } from '../useBenefitSchedule';
 import type { BenefitScheduleState } from '../useBenefitSchedule';
 import { useOperationData } from '../useOperationData';
-import { useLang, pick, pickCaseName, wardLabel } from '../i18n';
+import { useLang, pick, pickCaseShort, wardLabel } from '../i18n';
 import type { Lang, StringKey } from '../i18n';
 import type { SelectedPlan, CoverageView } from '../types';
 
@@ -150,7 +150,10 @@ function buildByCase({
   lines.push('');
   const tier = SURGERY_TIERS.find((x) => x.id === caseItem.tier);
   lines.push(blockHeading(t('msg.exampleLabel'), t));
-  lines.push(`${t('msg.procedure')}${pickCaseName(caseItem, lang)}`);
+  // Short name, not the official one — the official wording runs long enough to
+  // wrap two or three times on a phone, and the chart beside it already leads
+  // with the short name.
+  lines.push(`${t('msg.procedure')}${pickCaseShort(caseItem, lang)}`);
   // `short` ("小型"), not `zh` ("小手術") — the template appends 手術 / "surgery".
   if (tier) lines.push(`${t('msg.surgeryType')}${t('msg.tierSurgeryTpl').replace('{tier}', pick(tier.short, lang))}`);
   lines.push(`${t('msg.surgeryCostEst')}${fmtHK(caseItem.cost)}`);
@@ -213,7 +216,7 @@ function buildByPlan({
       lines.push('');
       lines.push(
         blockHeading(
-          t('msg.caseBlockTpl').replace('{tier}', tierName).replace('{name}', pickCaseName(c, lang)),
+          t('msg.caseBlockTpl').replace('{tier}', tierName).replace('{name}', pickCaseShort(c, lang)),
           t,
         ),
       );
