@@ -190,11 +190,11 @@ const en = {
   // "[Minor surgery: Injection or ligation of haemorrhoids]" — the case block
   // heading in "By plan", where the tier varies from block to block.
   "msg.caseBlockTpl": "{tier}: {name}",
-  "msg.baseBenefit": "Base benefit (surgeon + anaesthetist + theatre):",
+  "msg.baseBenefit": "Basic coverage (surgeon + anaesthetist + theatre):",
   // Short form for "By plan", where the plan's payout method is spelled out in
   // the summary block above and the label doesn't need to repeat it.
-  "msg.baseBenefitInline": "Base benefit: ",
-  "msg.smmBenefit": "SMM benefit: ",
+  "msg.baseBenefitInline": "Basic coverage: ",
+  "msg.smmBenefit": "SMM coverage: ",
   // {note} always carries at least the covered percentage, so the brackets are
   // never empty — hence one template rather than an optional suffix.
   "msg.totalPaidTpl": "Total paid: {amount} ({note})",
