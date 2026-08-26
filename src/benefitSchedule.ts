@@ -261,9 +261,29 @@ function capIfPresent(value: number, limit: number | null): number {
   return limit == null ? value : Math.min(value, limit);
 }
 
+// Flexi Premium ("Pink") is the tier-less deductible+percentage shape; every
+// other product follows the per-tier fee caps.
+export const isFlexiPremium = (schedule: BenefitSchedule): boolean =>
+  schedule.product.startsWith('vhis-flexi-premium');
+
+// Plan-level SMM terms, for prose that describes how a plan pays rather than
+// what one case yields. Both zero where no SMM rider applies (VHIS Standard,
+// and every Flexi Premium schedule). Deliberately non-throwing — this feeds a
+// descriptive line, so a schedule missing the fee items should degrade to "no
+// SMM" rather than take the whole message down.
+export function smmTerms(schedule: BenefitSchedule): { factorPct: number; annualLimit: number } {
+  const item = allItems(schedule).find(
+    (i) => (FEE_CODES as readonly string[]).includes(i.code) && i.smm_adjustment_factor != null,
+  );
+  return {
+    factorPct: item ? Math.round(num(item.smm_adjustment_factor!) * 100) : 0,
+    annualLimit: schedule.smm_annual_limit || 0,
+  };
+}
+
 export function computeSurgeryPayout(schedule: BenefitSchedule, tier: TierId, totalCost: number): BenefitPayout {
   const items = FEE_CODES.map((code) => findItemByCode(schedule, code));
-  return schedule.product.startsWith('vhis-flexi-premium')
+  return isFlexiPremium(schedule)
     ? computeFlexiPremiumPayout(schedule, items, totalCost)
     : computeTieredPayout(schedule, items, tier, totalCost);
 }

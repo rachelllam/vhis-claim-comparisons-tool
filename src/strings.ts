@@ -178,29 +178,51 @@ const en = {
   "msg.copy": "Copy",
 
   // ── message panel: generated WhatsApp body ──
-  "msg.greetingCase":
-    "Hi! Here’s a quick example of what your surgery could cost:",
+  "msg.headerCompare": "🔎 Coverage comparison 🔎",
+  "msg.headerCompareCases": "🔎 Coverage across surgeries 🔎",
+  // Block heading wrapper — full-width 【】 in zh, plain brackets in en.
+  "msg.blockTpl": "[{label}]",
+  "msg.exampleLabel": "Example",
   "msg.procedure": "Procedure: ",
-  "msg.estTotal": "Estimated total: ",
-  "msg.refProfile": "Reference profile: ",
-  "msg.comparison": "VHIS plan comparison:",
+  "msg.surgeryType": "Surgery type: ",
+  "msg.surgeryCostEst": "Estimated surgery cost: ",
+  "msg.tierSurgeryTpl": "{tier} surgery",
+  // "[Minor surgery: Injection or ligation of haemorrhoids]" — the case block
+  // heading in "By plan", where the tier varies from block to block.
+  "msg.caseBlockTpl": "{tier}: {name}",
+  "msg.baseBenefit": "Basic coverage (surgeon + anaesthetist + theatre):",
+  // Short form for "By plan", where the plan's payout method is spelled out in
+  // the summary block above and the label doesn't need to repeat it.
+  "msg.baseBenefitInline": "Basic coverage: ",
+  "msg.smmBenefit": "SMM coverage: ",
+  // {note} always carries at least the covered percentage, so the brackets are
+  // never empty — hence one template rather than an optional suffix.
+  "msg.totalPaidTpl": "Total paid: {amount} ({note})",
+  "msg.oopAmount": "You pay: ",
+  "msg.deductibleSuffixTpl": ": {amount} deductible",
+  "msg.belowDeductible": ", below the deductible",
   "msg.deductible": "Deductible: ",
-  "msg.vhisPays": "VHIS pays: ",
-  "msg.youPay": "You pay: ",
+  "msg.payoutMethod": "How it pays: ",
+  // Tiered plans (Standard, Flexi): per-tier surgical caps, then the SMM rider
+  // tops up what's left. Standard has no SMM rider, hence the shorter variant.
+  "msg.methodTieredSmmTpl": "capped by surgery type, with SMM covering {pct}% of the excess",
+  "msg.methodTiered": "capped by surgery type",
+  "msg.methodPremium": "eligible medical expenses fully covered once the annual deductible is met",
+  // The SMM rider's own annual ceiling, separate from the plan's overall limit.
+  "msg.smmCeilingTpl": "SMM limit: {amount} a year",
+  "msg.coverageCeiling": "Coverage limit: ",
+  "msg.limitAnnualTpl": "{amount}/year",
+  "msg.limitLifetimeTpl": "{amount}/lifetime",
+  "msg.limitSep": " · ",
+  "msg.ward": "Ward class: ",
+  // Ward class only bites on the SMM top-up for tiered plans — name it so.
+  "msg.wardSmm": "SMM ward class: ",
   "msg.calculating": "(calculating…)",
   "msg.unavailable": "(coverage unavailable)",
-  "msg.fullyCovered": "  — fully covered",
   "msg.estimateDisclaimer":
-    "Please note: these figures are for reference only and cover operation-related benefits, just to help you compare plans at a glance. For your exact coverage or an actual claim, please refer to the benefit schedule.",
+    "Please note: these figures are for reference only and cover operation-related benefits, to help you compare plans at a glance. Actual claim amounts follow the benefit schedule.",
   "msg.closing":
-    "Let me know if you have any questions — happy to walk through it.",
-  "msg.greetingPlanTpl":
-    "Hi! Here’s how {plan} would cover you across different surgeries:",
-  "msg.plan": "Plan: ",
-  "msg.perSurgeryLimit": "Per-surgery limit: ",
-  "msg.ward": "Ward: ",
-  "msg.coverageBySurgery": "Coverage by surgery:",
-  "msg.perSurgeryCapTpl": "{amount} per surgery",
+    "Let me know if you have any questions — happy to walk through it 😊",
 } as const;
 
 export type StringKey = keyof typeof en;
@@ -273,7 +295,7 @@ const zh: Record<StringKey, string> = {
   "chart.feeSurgeon": "外科醫生費",
   "chart.feeAnaesthetist": "麻醉科醫生費",
   "chart.feeTheatre": "手術室費用",
-  "chart.feeSmm": "主要醫療補充保障（SMM）",
+  "chart.feeSmm": "額外醫療保障（SMM）",
   "chart.smmBreakdownTpl":
     "扣除外科醫生費、麻醉科醫生費及手術室費後餘額 {remaining} × {pct}%",
   "chart.feeCombinedSurgical": "外科醫生費、麻醉科醫生費及手術室費（合併）",
@@ -370,26 +392,39 @@ const zh: Record<StringKey, string> = {
   "msg.copy": "複製",
 
   // ── message panel: generated WhatsApp body ──
-  "msg.greetingCase": "你好！以下是這項手術的預計費用參考：",
+  "msg.headerCompare": "🔎 不同計劃賠償比較 🔎",
+  "msg.headerCompareCases": "🔎 不同手術賠償比較 🔎",
+  "msg.blockTpl": "【{label}】",
+  "msg.exampleLabel": "例子",
   "msg.procedure": "手術：",
-  "msg.estTotal": "預計總額：",
-  "msg.refProfile": "參考資料：",
-  "msg.comparison": "自願醫保計劃比較：",
+  "msg.surgeryType": "手術類型：",
+  "msg.surgeryCostEst": "手術費估算：",
+  "msg.tierSurgeryTpl": "{tier}手術",
+  "msg.caseBlockTpl": "{tier}：{name}",
+  "msg.baseBenefit": "基本保額賠償（外科醫生＋麻醉科＋手術室費）：",
+  "msg.baseBenefitInline": "基本保額賠償：",
+  "msg.smmBenefit": "額外醫療保障（SMM）賠償：",
+  "msg.totalPaidTpl": "共賠償：{amount}（{note}）",
+  "msg.oopAmount": "自付金額：",
+  "msg.deductibleSuffixTpl": "：{amount}自付費",
+  "msg.belowDeductible": "，醫療費用未過自付費",
   "msg.deductible": "自付費：",
-  "msg.vhisPays": "自願醫保賠償：",
-  "msg.youPay": "你需支付：",
+  "msg.payoutMethod": "賠償方式：",
+  "msg.methodTieredSmmTpl": "按手術類型有不同上限，額外醫療保障（SMM）賠償超支部分 {pct}%",
+  "msg.methodTiered": "按手術類型有不同上限",
+  "msg.methodPremium": "年度合資格醫療開支超過自付費後全數賠償",
+  "msg.smmCeilingTpl": "SMM保障上限：每年 {amount}",
+  "msg.coverageCeiling": "保障上限：",
+  "msg.limitAnnualTpl": "{amount}/年",
+  "msg.limitLifetimeTpl": "{amount}/終身",
+  "msg.limitSep": "．",
+  "msg.ward": "病房級別：",
+  "msg.wardSmm": "SMM 病房級別：",
   "msg.calculating": "（計算中…）",
   "msg.unavailable": "（保障資料暫時無法計算）",
-  "msg.fullyCovered": "  — 全數保障",
   "msg.estimateDisclaimer":
-    "溫馨提示：以上金額僅供參考，只計算手術相關保障，快速了解不同計劃的保障差異。實際保障或索償金額，請以保障表為準。",
-  "msg.closing": "如有任何疑問，歡迎隨時聯絡我們了解詳情。",
-  "msg.greetingPlanTpl": "你好！以下是 {plan} 在不同手術下的保障：",
-  "msg.plan": "計劃：",
-  "msg.perSurgeryLimit": "每次手術上限：",
-  "msg.ward": "病房：",
-  "msg.coverageBySurgery": "各手術保障：",
-  "msg.perSurgeryCapTpl": "每次手術 {amount}",
+    "溫馨提示：以上金額僅供參考，只計算手術相關保障，以快速比較不同計劃的保障差異。實際賠償金額以保障表為準。",
+  "msg.closing": "如有任何疑問，歡迎隨時聯絡我們了解更多 😊",
 };
 
 export const STRINGS: Record<Lang, Record<StringKey, string>> = { en, zh };

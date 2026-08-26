@@ -244,9 +244,9 @@ export const getTreatmentDetail = (
 
 // All VHIS plans available (6). Each plan: annual coverage limit + per-surgery cap + ward class.
 export const VHIS_PLANS: VhisPlan[] = [
-  { id: 'std',          zh: '自願醫保 — 標準計劃',           en: 'VHIS Standard',                ward: 'standard',     annual: 420000,  perSurgery: 50000,   deductibles: [0],                   color: 'var(--bt-graphite)' },
-  { id: 'flexi-basic',  zh: '自願醫保 — 靈活計劃（基本）',   en: 'Flexi Basic',                  ward: 'standard',     annual: 1500000, perSurgery: 200000,  deductibles: [0],                   color: 'var(--bt-smurf)' },
-  { id: 'flexi-sup',    zh: '自願醫保 — 靈活計劃（升級）',   en: 'Flexi Superior',               ward: 'semi-private', annual: 8000000, perSurgery: 999999,  deductibles: [0],                   color: 'var(--bt-bowtie-blue)' },
+  { id: 'std',          zh: '標準計劃',           en: 'VHIS Standard',                ward: 'standard',     annual: 420000,  perSurgery: 50000,   deductibles: [0],                   color: 'var(--bt-graphite)' },
+  { id: 'flexi-basic',  zh: '靈活計劃（基本）',   en: 'Flexi Basic',                  ward: 'standard',     annual: 1500000, perSurgery: 200000,  deductibles: [0],                   color: 'var(--bt-smurf)' },
+  { id: 'flexi-sup',    zh: '靈活計劃（升級）',   en: 'Flexi Superior',               ward: 'semi-private', annual: 8000000, perSurgery: 999999,  deductibles: [0],                   color: 'var(--bt-bowtie-blue)' },
   { id: 'pink-std',     zh: '粉紅計劃（普通房）',            en: 'Pink (Standard ward)',          ward: 'standard',     annual: 3000000, perSurgery: 400000,  deductibles: [0, 20000, 50000, 80000], color: 'var(--bt-bubble-gum)' },
   { id: 'pink-semi',    zh: '粉紅計劃（半私家）',            en: 'Pink (Semi-private)',           ward: 'semi-private', annual: 5000000, perSurgery: 600000,  deductibles: [0, 20000, 50000, 80000], color: 'var(--bt-bowtie-pink)' },
   { id: 'pink-priv',    zh: '粉紅計劃（私家）',              en: 'Pink (Private)',                ward: 'private',      annual: 10000000,perSurgery: 800000,  deductibles: [0, 20000, 50000, 80000], color: 'var(--bt-dragon-fruit)' },
@@ -269,6 +269,15 @@ export const fmtHKShort = (n: number): string => {
   if (n >= 1000000) return 'HK$' + (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + 'M';
   if (n >= 1000) return 'HK$' + Math.round(n / 1000) + 'K';
   return 'HK$' + n;
+};
+
+// 萬-scale money for Chinese prose — "HK$1,000萬" is how Hong Kong reads a
+// HK$10M ceiling. Only for round multiples of 萬: anything else (or anything
+// smaller) is clearer in full, and rounding a real payout would be misleading.
+export const fmtHKWan = (n: number): string => {
+  n = Math.floor(n || 0);
+  if (n < 10000 || n % 10000 !== 0) return fmtHK(n);
+  return 'HK$' + (n / 10000).toLocaleString('en-US') + '萬';
 };
 
 // One representative case per tier (median cost) for the "by plan" coverage curve.
