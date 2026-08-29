@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import type { CSSProperties } from "react";
 import { VHIS_PLANS } from "../data";
 import { useLang, pick, wardLabel } from "../i18n";
@@ -58,78 +58,11 @@ const ccPlanStyles = {
     boxShadow: on ? "none" : "inset 0 0 0 1px var(--bt-stone)",
   }),
 
-  // Pink matrix ("fp-*" block — bulk row/column select + individual cells)
-  matrix: {
-    background: "var(--bt-pebble)",
-    border: "1px solid var(--bt-stone)",
-    borderRadius: "var(--bt-radius-s)",
-    padding: 10,
-    marginTop: 6,
-  } as CSSProperties,
-  matrixHead: {
-    display: "flex",
-    alignItems: "baseline",
-    justifyContent: "space-between",
-    gap: 8,
-    marginBottom: 8,
-    padding: "0 2px",
-    flexWrap: "wrap",
-  } as CSSProperties,
-  matrixTitle: {
-    font: "700 14px/1 var(--bt-font)",
-    color: "var(--bt-bowtie-blue)",
-  } as CSSProperties,
-  matrixHint: {
-    font: "400 11px/1.2 var(--bt-font)",
-    color: "var(--bt-graphite)",
-  } as CSSProperties,
-  grid: (cols: number): CSSProperties => ({
-    display: "grid",
+  // The pink matrix is styled by the .fp-* classes in index.css — it needs
+  // :hover and :active, which inline styles can't express. Only its column
+  // count stays here, since that comes from the data.
+  matrixCols: (cols: number): CSSProperties => ({
     gridTemplateColumns: `1.3fr repeat(${cols}, 1fr)`,
-    gap: 3,
-    background: "var(--bt-stone)",
-    padding: 1,
-    borderRadius: "var(--bt-radius-xs)",
-    overflow: "hidden",
-  }),
-  corner: { background: "var(--bt-pebble)" } as CSSProperties,
-  colHead: {
-    border: "none",
-    cursor: "pointer",
-    background: "var(--bt-pebble)",
-    font: "700 12px/1 var(--bt-font)",
-    color: "var(--bt-bowtie-blue)",
-    textAlign: "center",
-    padding: "10px 4px",
-    transition: "background var(--bt-duration-fast) var(--bt-ease)",
-  } as CSSProperties,
-  wardHead: {
-    border: "none",
-    cursor: "pointer",
-    background: "var(--bt-white)",
-    font: "700 13px/1.2 var(--bt-font)",
-    color: "var(--bt-bowtie-blue)",
-    display: "flex",
-    alignItems: "center",
-    padding: "0 8px",
-    width: "100%",
-    transition: "background var(--bt-duration-fast) var(--bt-ease)",
-  } as CSSProperties,
-  cell: (sel: boolean, disabled: boolean): CSSProperties => ({
-    border: "none",
-    borderRadius: 4,
-    cursor: disabled ? "default" : "pointer",
-    background: sel ? "var(--bt-bowtie-pink)" : "var(--bt-white)",
-    color: sel
-      ? "var(--bt-white)"
-      : disabled
-        ? "var(--bt-rock)"
-        : "var(--bt-bowtie-blue)",
-    font: "700 13px/1 var(--bt-font)",
-    textAlign: "center",
-    padding: "14px 4px",
-    transition:
-      "background var(--bt-duration-fast) var(--bt-ease), color var(--bt-duration-fast) var(--bt-ease)",
   }),
 };
 
@@ -155,6 +88,10 @@ function CCPlanPicker({
 }: PlanPickerProps) {
   const { t, lang } = useLang();
   const showQuote = quoteCtx && quoteCtx.show;
+  // Which ward row / deductible column is under the pointer, so the cells a
+  // bulk header click would add can preview themselves.
+  const [hoverRow, setHoverRow] = useState<string | null>(null);
+  const [hoverCol, setHoverCol] = useState<number | null>(null);
   const listPlans = VHIS_PLANS.filter((p) => !p.id.startsWith("pink"));
   const pinkPlans = VHIS_PLANS.filter((p) => p.id.startsWith("pink"));
   const pinkDeductibles = pinkPlans[0] ? pinkPlans[0].deductibles : [];
@@ -248,25 +185,29 @@ function CCPlanPicker({
       </div>
 
       {/* — Pink plan matrix — */}
-      <div style={ccPlanStyles.matrix}>
-        <div style={ccPlanStyles.matrixHead}>
-          <span style={ccPlanStyles.matrixTitle}>{t("plan.pinkPlan")}</span>
+      <div className="fp-block">
+        <div className="fp-blockhead">
+          <span className="fp-title">{t("plan.pinkPlan")}</span>
         </div>
-        <div style={ccPlanStyles.grid(pinkDeductibles.length)}>
-          <div style={ccPlanStyles.corner} aria-hidden="true"></div>
+        {/* Not role="grid": the ARIA grid pattern needs role="row" wrappers,
+            which would break the CSS grid these buttons are direct children
+            of. Each button carries a full aria-label instead, so a cell reads
+            as "半私家 · $20K" rather than a bare "$20K". */}
+        <div
+          className="fp-matrix"
+          style={ccPlanStyles.matrixCols(pinkDeductibles.length)}
+        >
+          <div className="fp-corner" aria-hidden="true"></div>
           {pinkDeductibles.map((d) => (
             <button
               key={"h" + d}
               type="button"
-              style={ccPlanStyles.colHead}
+              className="fp-colhead"
               title={`${dedColLabel(d)} · ${t("plan.pinkBulkSuffix")}`}
+              aria-label={`${dedColLabel(d)} · ${t("plan.pinkBulkSuffix")}`}
               onClick={() => selectDeductible(d)}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--bt-stone)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "var(--bt-pebble)";
-              }}
+              onMouseEnter={() => setHoverCol(d)}
+              onMouseLeave={() => setHoverCol(null)}
             >
               {dedColLabel(d)}
             </button>
@@ -276,21 +217,18 @@ function CCPlanPicker({
               <Fragment key={plan.id}>
                 <button
                   type="button"
+                  className="fp-rowhead"
                   style={{
-                    ...ccPlanStyles.wardHead,
                     flexDirection: "column",
                     alignItems: "flex-start",
                     gap: 3,
                     justifyContent: "center",
                   }}
                   title={`${wardLabel(plan.ward, t)} · ${t("plan.pinkBulkSuffix")}`}
+                  aria-label={`${wardLabel(plan.ward, t)} · ${t("plan.pinkBulkSuffix")}`}
                   onClick={() => selectWard(plan.id, plan.deductibles)}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "var(--bt-pebble)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "var(--bt-white)";
-                  }}
+                  onMouseEnter={() => setHoverRow(plan.id)}
+                  onMouseLeave={() => setHoverRow(null)}
                 >
                   <span>{wardLabel(plan.ward, t)}</span>
                   {showQuote && (
@@ -304,12 +242,22 @@ function CCPlanPicker({
                 {pinkDeductibles.map((d) => {
                   // Multi-select: any number of deductible tiers per ward can be active at once.
                   const isSel = isPinkSel(plan.id, d);
+                  // Previewed = what hovering this row/column header would add.
+                  // Bulk select is additive, so already-selected cells are excluded.
+                  const isPreview =
+                    !isSel && (hoverRow === plan.id || hoverCol === d);
                   return (
                     <button
                       key={plan.id + d}
                       type="button"
-                      style={ccPlanStyles.cell(isSel, false)}
+                      className={
+                        "fp-cell" +
+                        (isSel ? " is-on" : "") +
+                        (isPreview ? " is-preview" : "")
+                      }
+                      aria-pressed={isSel}
                       title={`${wardLabel(plan.ward, t)} · ${dedColLabel(d)}`}
+                      aria-label={`${wardLabel(plan.ward, t)} · ${dedColLabel(d)}`}
                       onClick={() => onSelectPink(plan.id, d)}
                     >
                       {dedColLabel(d)}

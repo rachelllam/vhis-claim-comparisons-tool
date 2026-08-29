@@ -293,12 +293,19 @@ body {
   background: var(--bt-pebble);
 }
 
-/* — App chrome — */
+/* — App chrome —
+   The whole app renders inside `#root { zoom: 0.85 }` (see the density tweak
+   below), so the header spec's px values would paint ~15% small. Every size in
+   this block is therefore the spec value ÷ 0.85 — i.e. `--bt-hd` — so the
+   topbar renders at exactly its designed size. Spec value noted per rule. */
+:root {
+  --bt-hd: calc(1 / 0.85); /* undoes the #root density zoom */
+}
 .cc-topbar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 18px 32px;
+  justify-content: space-between;
+  padding: calc(14px * var(--bt-hd)) calc(24px * var(--bt-hd));
   background: var(--bt-white);
   border-bottom: 1px solid var(--bt-stone);
   position: sticky;
@@ -308,26 +315,80 @@ body {
 .cc-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: calc(12px * var(--bt-hd));
 }
 .cc-wordmark {
-  font: 900 24px/1 var(--bt-font);
+  /* spec 18px */
+  font: 800 calc(18px * var(--bt-hd)) / 1 var(--bt-font);
   color: var(--bt-bowtie-blue);
-  letter-spacing: -0.01em;
+  letter-spacing: 0.02em;
 }
 .cc-tool-badge {
-  font: 700 12px/1 var(--bt-font);
+  /* spec 10px */
+  font: 700 calc(10px * var(--bt-hd)) / 1 var(--bt-font);
   color: var(--bt-bowtie-pink);
   background: var(--bt-blush);
-  padding: 6px 12px;
+  padding: calc(3px * var(--bt-hd)) calc(9px * var(--bt-hd));
   border-radius: var(--bt-radius-pill);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .cc-topbar-right {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: calc(18px * var(--bt-hd));
+}
+
+/* — Language switch: 64×28 pill with a sliding knob behind the EN/中 labels — */
+.cc-lang-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: calc(64px * var(--bt-hd));
+  height: calc(28px * var(--bt-hd));
+  padding: 0 calc(9px * var(--bt-hd));
+  border-radius: var(--bt-radius-pill);
+  border: 1.5px solid var(--bt-stone);
+  background: var(--bt-pebble);
+  cursor: pointer;
+}
+.cc-lang-switch:hover {
+  border-color: var(--bt-bowtie-pink);
+}
+.cc-lang-label {
+  position: relative;
+  z-index: 1;
+  /* spec 10px */
+  font: 700 calc(10px * var(--bt-hd)) / 1 var(--bt-font);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  user-select: none;
+}
+.cc-lang-knob {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: calc(22px * var(--bt-hd));
+  height: calc(22px * var(--bt-hd));
+  border-radius: 50%;
+  background: var(--bt-white);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transform: translateY(-50%);
+  transition: left var(--bt-duration-base) var(--bt-ease);
+}
+.cc-lang-switch.is-en .cc-lang-en,
+.cc-lang-switch.is-zh .cc-lang-zh {
+  color: var(--bt-bowtie-blue);
+}
+.cc-lang-switch.is-en .cc-lang-zh,
+.cc-lang-switch.is-zh .cc-lang-en {
+  color: var(--bt-rock);
+}
+.cc-lang-switch.is-zh .cc-lang-knob {
+  /* knob width + its 2px inset */
+  left: calc(100% - (22px * var(--bt-hd)) - 2px);
 }
 
 /* — Root shell: fixed viewport, panels scroll independently, page never scrolls — */
@@ -356,12 +417,29 @@ body {
 .cc-main {
   display: grid;
   grid-template-columns: 340px 1fr;
-  grid-template-areas: "left combined";
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "note note"
+    "left combined";
   gap: 16px;
   padding: 20px;
   flex: 1;
   min-height: 0;
   overflow: hidden;
+}
+/* Estimate disclaimer. It sits in .cc-main's own grid row rather than inside
+   the chart column so it can't scroll out of view behind the result cards. */
+.cc-note {
+  grid-area: note;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 16px;
+  border-radius: var(--bt-radius-s);
+  background: var(--bt-yellow-submarine-light);
+  border: 1px solid var(--bt-yellow-submarine);
+  font: 500 12px/1.5 var(--bt-font);
+  color: var(--bt-ink);
 }
 .cc-area-left {
   grid-area: left;
@@ -417,12 +495,17 @@ body {
   min-height: 0;
 }
 .cc-combined > .cc-combined-side {
-  padding: 24px;
   min-height: 0;
   overflow-y: auto;
 }
 .cc-combined > .cc-combined-side + .cc-combined-side {
   border-left: 1px solid var(--bt-stone);
+}
+/* Gutter between the chart content and the message column's divider. It lives
+   here rather than on the shared .cc-combined-side because the message column
+   pins its own head bar edge-to-edge and must stay unpadded. */
+.cc-chart-side {
+  padding-right: 24px;
 }
 
 /* — Panel — */
@@ -455,7 +538,7 @@ body {
   padding: 20px;
 }
 .cc-panel-h1 {
-  font: 700 22px/1.3 var(--bt-font);
+  font: 700 26px/1.3 var(--bt-font);
   color: var(--bt-bowtie-blue);
   margin: 0 0 4px;
 }
@@ -464,13 +547,16 @@ body {
   color: var(--bt-graphite);
   margin: 0 0 18px;
 }
+/* Section headings outrank the small grey sub-labels beneath them (the
+   gender/age `.fp-seg-label`s in CaseTab). They differ by size and colour
+   rather than by tracking and casing, because neither of those separates
+   anything in Chinese — uppercase is a no-op on CJK. */
 .cc-section-label {
   display: block;
-  font: 700 11px/1 var(--bt-font);
-  color: var(--bt-graphite);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin: 22px 0 10px;
+  font: 700 15px/1.3 var(--bt-font);
+  color: var(--bt-bowtie-blue);
+  letter-spacing: 0.01em;
+  margin: 24px 0 10px;
 }
 .cc-section-label:first-child {
   margin-top: 0;
@@ -513,6 +599,62 @@ body {
   color: var(--bt-ink);
 }
 
+/* — Gender / age segmented switch (CaseTab) —
+   One stone track per field with the active segment lifted onto white, per
+   cp-startage-switch.html. Sizes are multiplied by `--bt-hd` so the spec's
+   10/20px land at their intended optical size under `#root { zoom: 0.85 }`. */
+.fp-seg-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(6px * var(--bt-hd));
+}
+.fp-seg-label {
+  font: 700 calc(10px * var(--bt-hd)) / 1 var(--bt-font);
+  letter-spacing: 0.04em;
+  color: var(--bt-graphite);
+}
+.fp-seg-switch {
+  display: inline-flex;
+  align-items: center;
+  /* The age field has six bands; wrapping keeps the track inside the rail
+     instead of overflowing it on a narrow column. */
+  flex-wrap: wrap;
+  max-width: 100%;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--bt-radius-pill);
+  background: var(--bt-stone);
+}
+.fp-seg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(20px * var(--bt-hd));
+  padding: 0 calc(9px * var(--bt-hd));
+  border: none;
+  border-radius: var(--bt-radius-pill);
+  background: transparent;
+  color: var(--bt-rock);
+  font: 700 calc(10px * var(--bt-hd)) / 1 var(--bt-font);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--bt-duration-fast) var(--bt-ease);
+}
+.fp-seg:hover:not(.is-active) {
+  color: var(--bt-graphite);
+}
+.fp-seg.is-active {
+  background: var(--bt-white);
+  color: var(--bt-bowtie-blue);
+  box-shadow: var(--bt-shadow-1);
+}
+.fp-seg:focus-visible {
+  outline: 2px solid var(--bt-bowtie-blue);
+  outline-offset: 1px;
+}
+
 /* — Pill chip — */
 .cc-chip {
   display: inline-flex;
@@ -524,6 +666,98 @@ body {
   padding: 4px 10px;
   border-radius: var(--bt-radius-pill);
   white-space: nowrap;
+}
+
+/* — Flexi Premium ("Pink") ward × deductible matrix —
+   Gridlines are painted by the container's stone background showing through
+   the 3px gap, so no cell carries a border of its own. Type sizes are a size
+   up from the spec's 11–12px: the app renders inside `#root { zoom: 0.85 }`,
+   where the spec values would land at ~9–10px. */
+.fp-block {
+  background: var(--bt-pebble);
+  border: 1px solid var(--bt-stone);
+  border-radius: var(--bt-radius-s);
+  padding: 10px;
+  margin-top: 6px;
+}
+.fp-blockhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+.fp-title {
+  font: 700 14px/1 var(--bt-font);
+  color: var(--bt-bowtie-blue);
+  letter-spacing: 0.01em;
+}
+/* grid-template-columns is set inline — the column count comes from the data. */
+.fp-matrix {
+  display: grid;
+  gap: 3px;
+  background: var(--bt-stone);
+  padding: 1px;
+  border-radius: var(--bt-radius-xs);
+  overflow: hidden;
+}
+.fp-corner {
+  background: transparent;
+  min-height: 34px;
+}
+.fp-rowhead,
+.fp-colhead,
+.fp-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--bt-radius-xs);
+  background: var(--bt-white);
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all var(--bt-duration-fast) var(--bt-ease);
+}
+.fp-rowhead {
+  justify-content: flex-start;
+  text-align: left;
+  font: 700 13px/1.2 var(--bt-font);
+  color: var(--bt-bowtie-blue);
+}
+.fp-colhead {
+  font: 700 12px/1 var(--bt-font);
+  color: var(--bt-bowtie-blue);
+  font-variant-numeric: tabular-nums;
+}
+.fp-cell {
+  font: 700 13px/1 var(--bt-font);
+  color: var(--bt-ink);
+  font-variant-numeric: tabular-nums;
+}
+.fp-rowhead:hover,
+.fp-colhead:hover,
+.fp-cell:hover,
+/* Hovering a row/column header previews the cells that its bulk click adds. */
+.fp-cell.is-preview {
+  background: var(--bt-blush);
+  color: var(--bt-bowtie-pink);
+}
+.fp-rowhead:active,
+.fp-colhead:active,
+.fp-cell:active {
+  background: var(--bt-bowtie-pink);
+  color: var(--bt-white);
+}
+/* Selected cells stay pink, so this has to outrank :hover and .is-preview. */
+.fp-cell.is-on,
+.fp-cell.is-on:hover {
+  background: var(--bt-bowtie-pink);
+  color: var(--bt-white);
 }
 
 /* — Pill button (light) — */
@@ -657,17 +891,25 @@ body {
   border-radius: 3px;
 }
 
-/* — Plain text button — */
+/* — Ghost pill button — */
 .cc-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(36px * var(--bt-hd));
+  padding: 0 calc(18px * var(--bt-hd));
+  border: 2px solid transparent;
+  border-radius: var(--bt-radius-pill);
   background: transparent;
-  border: 0;
-  font: 500 13px/1 var(--bt-font);
+  /* spec 13px */
+  font: 700 calc(13px * var(--bt-hd)) / 1 var(--bt-font);
   color: var(--bt-graphite);
   cursor: pointer;
-  padding: 6px 8px;
+  transition: all var(--bt-duration-fast) var(--bt-ease);
 }
 .cc-link:hover {
   color: var(--bt-bowtie-pink);
+  background: var(--bt-blush);
 }
 
 /* — Rail tabs styled as browser tabs (single row) — */
@@ -810,70 +1052,152 @@ input[type="number"]::-webkit-outer-spin-button {
   cursor: pointer;
 }
 
-/* — Expandable message sidebar — */
+/* — Message sidebar —
+   Overrides the scroll .cc-combined-side sets: here the head is pinned and the
+   body flexes, so the textarea scrolls rather than the whole column. */
 .cc-msg-side {
   position: relative;
-}
-.cc-msg-ctrls {
-  position: absolute;
-  top: 22px;
-  right: 20px;
+  overflow: hidden;
   display: flex;
-  gap: 6px;
-  z-index: 2;
+  flex-direction: column;
+  min-height: 0;
 }
-.cc-icon-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--bt-radius-s);
-  border: 1px solid var(--bt-stone);
-  background: var(--bt-white);
+.cc-msg-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.cc-msg-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px 16px;
+}
+.cc-msg-head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+/* Matches .cc-panel-h1 so this title reads as a peer of the chart column's
+   heading beside it — minus the margin, since it sits in a flex row. */
+.cc-msg-title {
+  font: 700 26px/1.3 var(--bt-font);
+  color: var(--bt-bowtie-blue);
+}
+.cc-msg-fold {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  /* 6px each side leaves exactly the 20px the chevron needs (border-box). */
+  padding: 6px;
+  border: 0;
+  border-radius: var(--bt-radius-xs);
+  background: none;
   color: var(--bt-graphite);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--bt-duration-fast) var(--bt-ease);
-  padding: 0;
 }
-.cc-icon-btn:hover {
-  border-color: var(--bt-bowtie-pink);
-  color: var(--bt-bowtie-pink);
+.cc-msg-fold:hover {
+  background: var(--bt-pebble);
 }
-.cc-icon-btn svg {
-  width: 16px;
-  height: 16px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.cc-msg-chevron {
+  transition: transform var(--bt-duration-fast) var(--bt-ease);
 }
-.cc-msg-rail {
+.cc-msg-body {
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  padding: 22px 0;
-  cursor: pointer;
-  height: 100%;
+  overflow: hidden;
+}
+.cc-msg-textarea {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--bt-stone);
+  border-radius: var(--bt-radius-s);
+  background: var(--bt-pebble);
+  /* The generated body is mostly CJK, so this keeps the Chinese face and
+     normal wrapping instead of the spec's monospace + white-space: pre. */
+  font: 400 13px/1.7 var(--bt-font-zh);
+  color: var(--bt-ink);
+  resize: none;
+  outline: none;
   box-sizing: border-box;
+  transition: border-color var(--bt-duration-fast) var(--bt-ease);
+}
+.cc-msg-textarea:focus {
+  border-color: var(--bt-bowtie-pink);
   background: var(--bt-white);
-  transition: background var(--bt-duration-fast) var(--bt-ease);
 }
-.cc-msg-rail:hover {
-  background: var(--bt-blush);
+.cc-msg-footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
 }
-.cc-msg-rail:hover .cc-icon-btn {
+.cc-msg-length {
+  font: 500 11px/1 var(--bt-font);
+  color: var(--bt-graphite);
+}
+
+/* — Copy button — */
+.cc-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1.5px solid var(--bt-stone);
+  border-radius: var(--bt-radius-pill);
+  background: var(--bt-white);
+  font: 600 13px/1 var(--bt-font);
+  color: var(--bt-bowtie-blue);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--bt-duration-fast) var(--bt-ease);
+}
+.cc-copy-btn:hover:not(:disabled) {
   border-color: var(--bt-bowtie-pink);
   color: var(--bt-bowtie-pink);
 }
-.cc-msg-rail-label {
-  writing-mode: vertical-rl;
+.cc-copy-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.cc-copy-btn.is-done {
+  background: var(--bt-green-day-light);
+  border-color: var(--bt-green-day);
+  color: var(--bt-green-day);
+}
+
+/* Collapsed: the head bar stays, everything else folds away. */
+.cc-msg-side.is-collapsed .cc-msg-head {
+  justify-content: center;
+  /* The 52px collapsed column can't fit the 32px fold button plus 16px of
+     padding each side, so drop the padding rather than let the button
+     overflow its content box. */
+  padding-left: 0;
+  padding-right: 0;
+}
+.cc-msg-side.is-collapsed .cc-msg-title,
+.cc-msg-side.is-collapsed .cc-copy-btn,
+.cc-msg-side.is-collapsed .cc-msg-body {
+  display: none;
+}
+.cc-msg-side.is-collapsed .cc-msg-chevron {
   transform: rotate(180deg);
-  font: 700 13px/1 var(--bt-font);
-  color: var(--bt-bowtie-blue);
-  letter-spacing: 0.04em;
 }
 
 /* — Loading spinner (operation-data fetch gate) — */

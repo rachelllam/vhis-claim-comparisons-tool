@@ -55,43 +55,49 @@ const AGE_BANDS_V2 = [
 ];
 const AGE_BAND_MATCH_V2: Record<string, string[]> = { bb: [], toddler: [], teen: [], youth: [], middle: ['40-59'], senior: ['60+'] };
 
-// Vertical column of selectable chips (one column of the 2-column picker).
-function CCChipColumn({
+// One labelled segmented switch (gender or age band). Styling lives in the
+// .fp-seg-* classes in index.css — the segments need :hover and :focus-visible,
+// which inline styles can't express.
+function CCSegField({
+  label,
   value,
   options,
   onChange,
 }: {
+  label: string;
   value: string;
   options: { id: string; label: string }[];
   onChange: (id: string) => void;
 }) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-      {options.map((opt) => {
-        const on = opt.id === value;
-        return (
-          <button
-            key={opt.id}
-            onClick={() => onChange(opt.id)}
-            style={{
-              textAlign: 'left', cursor: 'pointer', borderRadius: 'var(--bt-radius-pill)',
-              padding: '9px 14px', font: `${on ? 700 : 500} 13px/1.25 var(--bt-font)`,
-              background: on ? 'var(--bt-blush)' : 'var(--bt-white)',
-              color: on ? 'var(--bt-bowtie-pink)' : 'var(--bt-graphite)',
-              border: `1.5px solid ${on ? 'var(--bt-bowtie-pink)' : 'var(--bt-stone)'}`,
-              transition: 'all var(--bt-duration-fast) var(--bt-ease)',
-            }}
-          >
-            {opt.label}
-          </button>
-        );
-      })}
+    <div className="fp-seg-field">
+      <span className="fp-seg-label">{label}</span>
+      <div className="fp-seg-switch" role="group" aria-label={label}>
+        {options.map((opt) => {
+          const on = opt.id === value;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              className={'fp-seg' + (on ? ' is-active' : '')}
+              aria-pressed={on}
+              onClick={() => onChange(opt.id)}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
 const ccCaseV2 = {
-  list: { display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 300, paddingRight: 4 } as CSSProperties,
+  // Fills whatever height the rail leaves below the tier/filter controls
+  // rather than capping at a fixed px, so the list is as long as the panel
+  // allows. `minHeight: 0` lets it actually shrink and scroll (via .cc-scroll)
+  // instead of forcing its flex parent taller.
+  list: { display: 'flex', flexDirection: 'column', gap: 8, flex: 1, minHeight: 0, paddingRight: 4 } as CSSProperties,
   card: (on: boolean): CSSProperties => ({
     display: 'block', width: '100%', textAlign: 'left', cursor: 'pointer',
     background: on ? 'var(--bt-blush)' : 'var(--bt-white)',
@@ -201,25 +207,21 @@ export function CaseTab(props: CaseFilterProps) {
     { id: 'female', label: t('common.female') },
   ];
 
-  const labelCss: CSSProperties = { font: '700 11px/1 var(--bt-font)', color: 'var(--bt-graphite)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: 8 };
-
   return (
-    <div>
-      {!hideHeader && <h2 className="cc-panel-h1">{t('case.title')}</h2>}
-      {!hideHeader && <p className="cc-panel-sub">{t('case.sub')}</p>}
+    // Column layout so the case list can take all the height the rail body
+    // gives us; the controls above it keep their natural size.
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+      <div style={{ flex: 'none' }}>
+        {!hideHeader && <h2 className="cc-panel-h1">{t('case.title')}</h2>}
+        {!hideHeader && <p className="cc-panel-sub">{t('case.sub')}</p>}
 
-      <div className="cc-section-label">{t('case.surgeryTier')}</div>
-      <CCSurgeryTiers value={tier} onChange={setTier} />
+        <div className="cc-section-label">{t('case.surgeryTier')}</div>
+        <CCSurgeryTiers value={tier} onChange={setTier} />
 
-      <div className="cc-section-label">{t('case.realExamples')}</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 14 }}>
-        <div>
-          <div style={labelCss}>{t('case.gender')}</div>
-          <CCChipColumn value={gender} options={genderOpts} onChange={setGender} />
-        </div>
-        <div>
-          <div style={labelCss}>{t('case.age')}</div>
-          <CCChipColumn value={age} options={AGE_BANDS_V2} onChange={setAge} />
+        <div className="cc-section-label">{t('case.realExamples')}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 14 }}>
+          <CCSegField label={t('case.gender')} value={gender} options={genderOpts} onChange={setGender} />
+          <CCSegField label={t('case.age')} value={age} options={AGE_BANDS_V2} onChange={setAge} />
         </div>
       </div>
       <CCCaseListMulti tier={tier} gender={gender} age={age} selectedIds={selectedCaseIds} onToggle={onToggleCase} />
