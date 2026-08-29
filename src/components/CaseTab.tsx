@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import { SURGERY_TIERS, fmtHK } from '../data';
 import type { TierId } from '../data';
 import { useOperationData } from '../useOperationData';
-import { useLang, pick, pickCaseName } from '../i18n';
+import { useLang, pick, pickCaseShort } from '../i18n';
 import type { CaseFilterProps } from '../types';
 
 // Surgery tier card styles (ported from cc-input-panel.jsx ccInputStyles).
@@ -173,7 +173,7 @@ function CCCaseListMulti({
             title={on ? t('common.removeFromComparison') : t('common.addToComparison')}
           >
             <div style={ccCaseV2.head}>
-              <div style={ccCaseV2.title}>{pickCaseName(c, lang)}</div>
+              <div style={ccCaseV2.title}>{pickCaseShort(c, lang)}</div>
               <div style={ccCaseV2.right}>
                 <span style={ccCaseV2.price}>{fmtHK(c.cost)}</span>
                 <span style={ccCaseV2.check(on)}>
