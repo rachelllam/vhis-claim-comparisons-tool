@@ -587,6 +587,98 @@ body {
   white-space: nowrap;
 }
 
+/* — Flexi Premium ("Pink") ward × deductible matrix —
+   Gridlines are painted by the container's stone background showing through
+   the 3px gap, so no cell carries a border of its own. Type sizes are a size
+   up from the spec's 11–12px: the app renders inside `#root { zoom: 0.85 }`,
+   where the spec values would land at ~9–10px. */
+.fp-block {
+  background: var(--bt-pebble);
+  border: 1px solid var(--bt-stone);
+  border-radius: var(--bt-radius-s);
+  padding: 10px;
+  margin-top: 6px;
+}
+.fp-blockhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+.fp-title {
+  font: 700 14px/1 var(--bt-font);
+  color: var(--bt-bowtie-blue);
+  letter-spacing: 0.01em;
+}
+/* grid-template-columns is set inline — the column count comes from the data. */
+.fp-matrix {
+  display: grid;
+  gap: 3px;
+  background: var(--bt-stone);
+  padding: 1px;
+  border-radius: var(--bt-radius-xs);
+  overflow: hidden;
+}
+.fp-corner {
+  background: transparent;
+  min-height: 34px;
+}
+.fp-rowhead,
+.fp-colhead,
+.fp-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--bt-radius-xs);
+  background: var(--bt-white);
+  font-family: inherit;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all var(--bt-duration-fast) var(--bt-ease);
+}
+.fp-rowhead {
+  justify-content: flex-start;
+  text-align: left;
+  font: 700 13px/1.2 var(--bt-font);
+  color: var(--bt-bowtie-blue);
+}
+.fp-colhead {
+  font: 700 12px/1 var(--bt-font);
+  color: var(--bt-bowtie-blue);
+  font-variant-numeric: tabular-nums;
+}
+.fp-cell {
+  font: 700 13px/1 var(--bt-font);
+  color: var(--bt-ink);
+  font-variant-numeric: tabular-nums;
+}
+.fp-rowhead:hover,
+.fp-colhead:hover,
+.fp-cell:hover,
+/* Hovering a row/column header previews the cells that its bulk click adds. */
+.fp-cell.is-preview {
+  background: var(--bt-blush);
+  color: var(--bt-bowtie-pink);
+}
+.fp-rowhead:active,
+.fp-colhead:active,
+.fp-cell:active {
+  background: var(--bt-bowtie-pink);
+  color: var(--bt-white);
+}
+/* Selected cells stay pink, so this has to outrank :hover and .is-preview. */
+.fp-cell.is-on,
+.fp-cell.is-on:hover {
+  background: var(--bt-bowtie-pink);
+  color: var(--bt-white);
+}
+
 /* — Pill button (light) — */
 .cc-pill-btn {
   display: inline-flex;
