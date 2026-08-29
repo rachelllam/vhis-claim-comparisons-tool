@@ -63,16 +63,20 @@ function CCSegField({
   value,
   options,
   onChange,
+  fill,
 }: {
   label: string;
   value: string;
   options: { id: string; label: string }[];
   onChange: (id: string) => void;
+  // Spread the segments evenly across the full rail width instead of letting
+  // them size to their labels — needed once a track has too many bands to fit.
+  fill?: boolean;
 }) {
   return (
     <div className="fp-seg-field">
       <span className="fp-seg-label">{label}</span>
-      <div className="fp-seg-switch" role="group" aria-label={label}>
+      <div className={'fp-seg-switch' + (fill ? ' is-fill' : '')} role="group" aria-label={label}>
         {options.map((opt) => {
           const on = opt.id === value;
           return (
@@ -206,6 +210,8 @@ export function CaseTab(props: CaseFilterProps) {
     { id: 'male', label: t('common.male') },
     { id: 'female', label: t('common.female') },
   ];
+  // 'all' first, matching the gender switch — it's also the state Clear all resets to.
+  const ageOpts = [{ id: 'all', label: t('common.any') }, ...AGE_BANDS_V2];
 
   return (
     // Column layout so the case list can take all the height the rail body
@@ -221,7 +227,7 @@ export function CaseTab(props: CaseFilterProps) {
         <div className="cc-section-label">{t('case.realExamples')}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 14 }}>
           <CCSegField label={t('case.gender')} value={gender} options={genderOpts} onChange={setGender} />
-          <CCSegField label={t('case.age')} value={age} options={AGE_BANDS_V2} onChange={setAge} />
+          <CCSegField label={t('case.age')} value={age} options={ageOpts} onChange={setAge} fill />
         </div>
       </div>
       <CCCaseListMulti tier={tier} gender={gender} age={age} selectedIds={selectedCaseIds} onToggle={onToggleCase} />
