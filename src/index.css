@@ -524,13 +524,16 @@ body {
   color: var(--bt-graphite);
   margin: 0 0 18px;
 }
+/* Section headings outrank the small grey sub-labels beneath them (the
+   gender/age `.fp-seg-label`s in CaseTab). They differ by size and colour
+   rather than by tracking and casing, because neither of those separates
+   anything in Chinese — uppercase is a no-op on CJK. */
 .cc-section-label {
   display: block;
-  font: 700 11px/1 var(--bt-font);
-  color: var(--bt-graphite);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin: 22px 0 10px;
+  font: 700 15px/1.3 var(--bt-font);
+  color: var(--bt-bowtie-blue);
+  letter-spacing: 0.01em;
+  margin: 24px 0 10px;
 }
 .cc-section-label:first-child {
   margin-top: 0;
@@ -571,6 +574,62 @@ body {
 }
 .cc-seg button:hover:not(.on) {
   color: var(--bt-ink);
+}
+
+/* — Gender / age segmented switch (CaseTab) —
+   One stone track per field with the active segment lifted onto white, per
+   cp-startage-switch.html. Sizes are multiplied by `--bt-hd` so the spec's
+   10/20px land at their intended optical size under `#root { zoom: 0.85 }`. */
+.fp-seg-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(6px * var(--bt-hd));
+}
+.fp-seg-label {
+  font: 700 calc(10px * var(--bt-hd)) / 1 var(--bt-font);
+  letter-spacing: 0.04em;
+  color: var(--bt-graphite);
+}
+.fp-seg-switch {
+  display: inline-flex;
+  align-items: center;
+  /* The age field has six bands; wrapping keeps the track inside the rail
+     instead of overflowing it on a narrow column. */
+  flex-wrap: wrap;
+  max-width: 100%;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--bt-radius-pill);
+  background: var(--bt-stone);
+}
+.fp-seg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(20px * var(--bt-hd));
+  padding: 0 calc(9px * var(--bt-hd));
+  border: none;
+  border-radius: var(--bt-radius-pill);
+  background: transparent;
+  color: var(--bt-rock);
+  font: 700 calc(10px * var(--bt-hd)) / 1 var(--bt-font);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--bt-duration-fast) var(--bt-ease);
+}
+.fp-seg:hover:not(.is-active) {
+  color: var(--bt-graphite);
+}
+.fp-seg.is-active {
+  background: var(--bt-white);
+  color: var(--bt-bowtie-blue);
+  box-shadow: var(--bt-shadow-1);
+}
+.fp-seg:focus-visible {
+  outline: 2px solid var(--bt-bowtie-blue);
+  outline-offset: 1px;
 }
 
 /* — Pill chip — */
