@@ -1,11 +1,14 @@
 // Benefit-schedule fetch + cache — the per-VHIS-product coverage categories/items/
 // limits, fetched lazily (per plan, on demand) from the Drop proxy and cached by
 // product_code so repeat lookups don't re-fetch.
-import { VHIS_PLANS } from './data';
+import { ACCESS_HINT, VHIS_PLANS } from './data';
 import type { TierId } from './data';
 
-// Absolute URL so this works both deployed (same-origin) and from local dev servers.
-const PROXY_URL = 'https://drop.ai.bowtie.hk/proxy';
+// Deployed we're same-origin with Drop, so the browser's Cloudflare Access cookie
+// is sent automatically. From localhost the fetch is cross-origin and carries no
+// credentials, so Access 302s to a login page with no CORS headers — hence the dev
+// proxy (see vite.config.ts).
+const PROXY_URL = import.meta.env.DEV ? '/drop-proxy' : 'https://drop.ai.bowtie.hk/proxy';
 
 // NOTE on Content-Type: we send text/plain instead of application/json so the
 // browser treats this as a "simple" CORS request and skips the OPTIONS preflight.
@@ -18,6 +21,7 @@ async function api(endpoint: string, params: Record<string, string> = {}): Promi
     headers: { 'content-type': 'text/plain;charset=UTF-8' },
     body: JSON.stringify({ endpoint, params }),
   });
+  if (res.status === 511) throw new Error(ACCESS_HINT);
   if (!res.ok) {
     const text = await res.text().catch(() => '');
     throw new Error(`${res.status} ${text || res.statusText}`);
