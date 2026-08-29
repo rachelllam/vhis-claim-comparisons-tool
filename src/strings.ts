@@ -311,7 +311,7 @@ const zh: Record<StringKey, string> = {
   "tabs.pickPlansHint": "在「計劃」分頁選擇計劃 →",
 
   // ── case tab ──
-  "case.title": "個案",
+  "case.title": "手術",
   "case.sub": "選擇要比較的手術例子",
   "case.surgeryTier": "手術類型",
   "case.realExamples": "手術",
