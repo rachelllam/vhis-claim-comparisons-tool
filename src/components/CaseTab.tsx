@@ -193,12 +193,7 @@ function CCCaseListMulti({
 
 export function CaseTab(props: CaseFilterProps) {
   const { tier, setTier, gender, setGender, age, setAge, selectedCaseIds, onToggleCase, hideHeader } = props;
-  const { cases } = useOperationData();
   const { t } = useLang();
-  const inTier = selectedCaseIds.filter((id) => {
-    const c = cases.find((x) => x.id === id);
-    return c && c.tier === tier;
-  }).length;
 
   const genderOpts = [
     { id: 'all', label: t('common.any') },
@@ -216,10 +211,7 @@ export function CaseTab(props: CaseFilterProps) {
       <div className="cc-section-label">{t('case.surgeryTier')}</div>
       <CCSurgeryTiers value={tier} onChange={setTier} />
 
-      <div className="cc-section-label">
-        {t('case.realExamples')}
-        {inTier > 0 && <span className="pink"> {t('case.inThisTierTpl').replace('{n}', String(inTier))}</span>}
-      </div>
+      <div className="cc-section-label">{t('case.realExamples')}</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 14 }}>
         <div>
           <div style={labelCss}>{t('case.gender')}</div>

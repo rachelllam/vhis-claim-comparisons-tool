@@ -133,9 +133,7 @@ function ResultCardV2({
           </div>
           {ded > 0 && (
             <div style={{ ...ccChartStyles.receiptRow, ...ccChartStyles.receiptRowBorder }}>
-              <span style={ccChartStyles.receiptLabel}>
-                {t('chart.deductible')}<span style={ccChartStyles.receiptHint}>{t('chart.youPayFirst')}</span>
-              </span>
+              <span style={ccChartStyles.receiptLabel}>{t('chart.deductible')}</span>
               <span style={{ ...ccChartStyles.receiptVal, ...ccChartStyles.receiptValNeg }}>−{fmtHK(ded)}</span>
             </div>
           )}
@@ -163,9 +161,7 @@ function ResultCardV2({
             ))}
           </div>
           <div style={ccChartStyles.paysBox(zero)}>
-            <span style={ccChartStyles.paysLabel}>
-              {t('chart.netPayout')}<span style={ccChartStyles.paysSub}>{t('chart.netPayoutSub')}</span>
-            </span>
+            <span style={ccChartStyles.paysLabel}>{t('chart.netPayout')}</span>
             <span style={ccChartStyles.paysValue(zero)}>{fmtHK(covered)}</span>
           </div>
           <div style={ccChartStyles.youPayRow}>
@@ -274,9 +270,6 @@ function TreatmentHeader({ focusCase, onOpenDetail }: { focusCase: SurgeryCase; 
         <div style={ccV2.stripCell}>
           <span style={ccV2.stripKicker}>{t('chart.estMedicalCharge')}</span>
           <span style={ccV2.stripBlue}>{fmtHK(focusCase.cost)}</span>
-          <span style={ccDetail.rangeNote}>
-            {t('chart.rangeNoteTpl').replace('{tier}', tier ? pick(tier, lang) : '').replace('{range}', tier ? tier.rangeLabel : '')}
-          </span>
         </div>
         <div style={ccV2.stripCell}>
           <span style={ccV2.stripKicker}>{t('chart.usualStay')}</span>
@@ -360,14 +353,11 @@ export function ChartPanel({
   const [detailCase, setDetailCase] = useState<SurgeryCase | null>(null);
   const modal = detailCase && <InternalDetailModal caseItem={detailCase} onClose={() => setDetailCase(null)} />;
 
-  const Header = ({ children }: { children: ReactNode }) => (
+  const Header = () => (
     <div>
       <h2 className="cc-panel-h1" style={{ marginBottom: 4 }}>
         {t('chart.title')}
       </h2>
-      <p className="cc-panel-sub" style={{ margin: 0 }}>
-        {children}
-      </p>
     </div>
   );
 
@@ -377,7 +367,7 @@ export function ChartPanel({
     if (!focusCase) {
       return (
         <div>
-          <Header>{t('chart.splitBill')}</Header>
+          <Header />
           <div style={{ marginTop: 18 }}>
             <PromptBox title={t('chart.pickCasesTitle')} sub={t('chart.pickCasesSub')} />
           </div>
@@ -386,7 +376,7 @@ export function ChartPanel({
     }
     return (
       <div>
-        <Header>{t('chart.splitBill')}</Header>
+        <Header />
         <TreatmentHeader focusCase={focusCase} onOpenDetail={() => setDetailCase(focusCase)} />
         <Legend showDeductible={activePlans.some((p) => p.deductible > 0)} />
 
@@ -417,7 +407,7 @@ export function ChartPanel({
 
   return (
     <div>
-      <Header>{focusDef ? t('chart.holdsUpTpl').replace('{plan}', pick(focusDef, lang)) : t('chart.holdsUpGeneric')}</Header>
+      <Header />
 
       {activePlans.length === 0 && (
         <div style={{ marginTop: 18 }}>

@@ -346,17 +346,13 @@ export function PlanTab(props: PlanTabProps) {
     quoteCtx,
   } = props;
   const { t } = useLang();
-  const filledCount = plans.length;
   return (
     <div>
       {!hideHeader && <h2 className="cc-panel-h1">{t("plan.configure")}</h2>}
       {!hideHeader && <p className="cc-panel-sub">{t("plan.addToCompare")}</p>}
 
       <div className="cc-section-label" style={{ marginTop: 0 }}>
-        {t("plan.vhisPlans")}{" "}
-        <span style={{ color: "var(--bt-bowtie-pink)" }}>
-          {t("plan.selectedTpl").replace("{n}", String(filledCount))}
-        </span>
+        {t("plan.vhisPlans")}
       </div>
       <CCPlanPicker
         selected={plans}

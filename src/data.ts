@@ -74,9 +74,9 @@ export interface VhisPlan {
 }
 
 export const SURGERY_TIERS: SurgeryTier[] = [
-  { id: 'minor',        zh: '小手術',   en: 'Minor',        short: { zh: '小型', en: 'Minor' },        rangeMin: 15000,  rangeMax: 25000,  rangeLabel: 'HK$15K–25K',    accent: 'var(--bt-green-day)' },
-  { id: 'intermediate', zh: '中手術',   en: 'Intermediate', short: { zh: '中型', en: 'Intermediate' }, rangeMin: 40000,  rangeMax: 70000,  rangeLabel: 'HK$40K–70K',    accent: 'var(--bt-smurf)' },
-  { id: 'major',        zh: '大手術',   en: 'Major',        short: { zh: '大型', en: 'Major' },        rangeMin: 100000, rangeMax: 200000, rangeLabel: 'HK$100K–200K',  accent: 'var(--bt-yellow-submarine)' },
+  { id: 'minor',        zh: '小型手術', en: 'Minor',        short: { zh: '小型', en: 'Minor' },        rangeMin: 15000,  rangeMax: 25000,  rangeLabel: 'HK$15K–25K',    accent: 'var(--bt-green-day)' },
+  { id: 'intermediate', zh: '中型手術', en: 'Intermediate', short: { zh: '中型', en: 'Intermediate' }, rangeMin: 40000,  rangeMax: 70000,  rangeLabel: 'HK$40K–70K',    accent: 'var(--bt-smurf)' },
+  { id: 'major',        zh: '大型手術', en: 'Major',        short: { zh: '大型', en: 'Major' },        rangeMin: 100000, rangeMax: 200000, rangeLabel: 'HK$100K–200K',  accent: 'var(--bt-yellow-submarine)' },
   { id: 'complex',      zh: '複雜手術', en: 'Complex',      short: { zh: '複雜', en: 'Complex' },       rangeMin: 250000, rangeMax: 500000, rangeLabel: 'HK$250K–500K+', accent: 'var(--bt-hotel-california)' },
 ];
 
