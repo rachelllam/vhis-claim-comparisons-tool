@@ -105,14 +105,16 @@ export function CoverageTabsBar({
         ) : (
           activePlans.map((p) => {
             const def = VHIS_PLANS.find((v) => v.id === p.id);
-            // When more than one deductible tier of the same ward is active,
-            // append the deductible so tabs stay distinguishable.
+            // Pink plans are picked per (ward × deductible) cell, so the tier is
+            // part of what was chosen — always name it. Other plans append it
+            // only when more than one tier of the same ward is active, to keep
+            // those tabs distinguishable.
             const sameIdCount = activePlans.filter((x) => x.id === p.id).length;
+            const showDeductible = p.id.startsWith('pink') || sameIdCount > 1;
             const baseLabel = def ? pick(def, lang) : p.id;
-            const label =
-              sameIdCount > 1
-                ? `${baseLabel} · ${t('chart.deductible')} ${p.deductible === 0 ? t('common.none') : fmtHK(p.deductible)}`
-                : baseLabel;
+            const label = showDeductible
+              ? `${baseLabel} · ${t('chart.deductible')} ${p.deductible === 0 ? t('common.none') : fmtHK(p.deductible)}`
+              : baseLabel;
             return (
               <TabBtn
                 key={`${p.id}-${p.deductible}`}
