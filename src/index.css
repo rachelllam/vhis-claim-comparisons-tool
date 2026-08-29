@@ -417,12 +417,29 @@ body {
 .cc-main {
   display: grid;
   grid-template-columns: 340px 1fr;
-  grid-template-areas: "left combined";
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "note note"
+    "left combined";
   gap: 16px;
   padding: 20px;
   flex: 1;
   min-height: 0;
   overflow: hidden;
+}
+/* Estimate disclaimer. It sits in .cc-main's own grid row rather than inside
+   the chart column so it can't scroll out of view behind the result cards. */
+.cc-note {
+  grid-area: note;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 16px;
+  border-radius: var(--bt-radius-s);
+  background: var(--bt-yellow-submarine-light);
+  border: 1px solid var(--bt-yellow-submarine);
+  font: 500 12px/1.5 var(--bt-font);
+  color: var(--bt-ink);
 }
 .cc-area-left {
   grid-area: left;

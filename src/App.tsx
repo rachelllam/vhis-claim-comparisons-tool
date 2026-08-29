@@ -127,6 +127,12 @@ function LangSwitch() {
   );
 }
 
+/* ── Estimate disclaimer ───────────────────────────────────────── */
+function EstimateNote() {
+  const { t } = useLang();
+  return <div className="cc-note">{t('chart.estimateDisclaimer')}</div>;
+}
+
 /* ── Top bar ───────────────────────────────────────────────────── */
 function CCTopBar({ onClearAll, showQuotes, setShowQuotes }: { onClearAll: () => void; showQuotes: boolean; setShowQuotes: (v: boolean) => void }) {
   const { t } = useLang();
@@ -257,6 +263,7 @@ function CoverageApp() {
     <>
       <CCTopBar onClearAll={onClearAll} showQuotes={showQuotes} setShowQuotes={setShowQuotes} />
       <div className="cc-main">
+        <EstimateNote />
         <div className="cc-area-left">
           <div className="cc-panel">
             <LeftRail configProps={configProps} caseProps={caseProps} aboutProps={aboutProps} />
