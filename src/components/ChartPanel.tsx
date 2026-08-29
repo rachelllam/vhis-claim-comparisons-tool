@@ -20,11 +20,49 @@ import { ccChartStyles, ccV2, ccDetail } from './chartStyles';
 import { ccQuote } from './common';
 import { LockIcon, InternalDetailModal } from './InternalDetailModal';
 
-const capLabelShort = (plan: VhisPlan, t: (k: StringKey) => string) =>
-  plan.perSurgery >= 999999 ? t('common.noCap') : fmtHKShort(plan.perSurgery);
 // "3 nights" / "3 晚" / "Day case" for a hospital-stay night count.
 const nightsLabel = (days: number, t: (k: StringKey) => string) =>
   days === 0 ? t('common.dayCase') : `${days} ${t(days === 1 ? 'chart.night' : 'chart.nights')}`;
+
+// Plan-terms strip cell: the ceilings the focused plan actually carries, read
+// from its live benefit schedule rather than the static VHIS_PLANS table.
+// Which second ceiling applies falls out of the schedule's own shape:
+//  - VHIS Standard — annual limit only (no SMM rider, no lifetime cap).
+//  - Flexi Regular / Flexi Plus — annual limit + the SMM rider's annual ceiling.
+//  - Flexi Premium ("Pink") — annual limit + lifetime limit.
+// Its own component so the hook lives in a real component body — the by-plan
+// branch it renders in sits after the by-case early return, where a hook can't go.
+function PlanLimitsCell({ planId, deductible }: { planId: string; deductible: number }) {
+  const { t } = useLang();
+  const { schedule, error, loading } = useBenefitSchedule(planId, deductible);
+
+  if (!schedule) {
+    return (
+      <div style={ccV2.stripCell}>
+        <span style={ccV2.stripKicker}>{t('chart.annualBenefitLimit')}</span>
+        <span style={ccV2.stripBlue}>—</span>
+        <span style={ccV2.stripSmall}>
+          {error ? t('chart.scheduleErrorTitle') : loading ? t('chart.scheduleLoading') : ''}
+        </span>
+      </div>
+    );
+  }
+
+  const secondary =
+    schedule.lifetime_limit != null
+      ? t('chart.lifetimeLimitTpl').replace('{amount}', fmtHKShort(schedule.lifetime_limit))
+      : schedule.smm_annual_limit > 0
+        ? t('chart.smmLimitTpl').replace('{amount}', fmtHKShort(schedule.smm_annual_limit))
+        : '';
+
+  return (
+    <div style={ccV2.stripCell}>
+      <span style={ccV2.stripKicker}>{t('chart.annualBenefitLimit')}</span>
+      <span style={ccV2.stripBlue}>{fmtHKShort(schedule.annual_limit)}</span>
+      <span style={ccV2.stripSmall}>{secondary}</span>
+    </div>
+  );
+}
 
 // ── Generalised result card: header (JSX) + coverage bar + receipt ──
 function ResultCardV2({
@@ -417,15 +455,10 @@ export function ChartPanel({
                 {showPrem && premOf(focus.id) != null ? ` · HK$${premOf(focus.id)!.toLocaleString('en-US')}${t('common.perMonth')}` : ''}
               </span>
             </div>
-            <div style={ccV2.stripCell}>
-              <span style={ccV2.stripKicker}>{t('chart.perSurgeryLimit')}</span>
-              <span style={ccV2.stripBlue}>{capLabelShort(focusDef, t)}</span>
-              <span style={ccV2.stripSmall}>{t('chart.capsEachClaim')}</span>
-            </div>
+            <PlanLimitsCell planId={focus.id} deductible={focus.deductible} />
             <div style={ccV2.stripCell}>
               <span style={ccV2.stripKicker}>{t('chart.wardClass')}</span>
               <span style={ccV2.stripBig}>{wardLabel(focusDef.ward, t)}</span>
-              <span style={ccV2.stripSmall}>{t('chart.annualTpl').replace('{amount}', fmtHKShort(focusDef.annual))}</span>
             </div>
           </div>
 
