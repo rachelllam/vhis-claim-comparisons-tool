@@ -266,7 +266,7 @@ function CoverageApp() {
           <div className="cc-combined-wrap">
             <CoverageTabsBar plans={plans} cv={cv} onRemove={removePlan} onRemoveCase={toggleCase} />
             <div className="cc-panel cc-combined" style={{ gridTemplateColumns: `1fr ${msgCol}px` }}>
-              <div className="cc-combined-side">
+              <div className="cc-combined-side cc-chart-side">
                 <ChartPanel plans={plans} onRemove={removePlan} onRemoveCase={toggleCase} cv={cv} quoteCtx={quoteCtx} />
               </div>
               <div className={'cc-combined-side cc-msg-side' + (msgCollapsed ? ' is-collapsed' : '')}>

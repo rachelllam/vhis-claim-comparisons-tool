@@ -484,6 +484,12 @@ body {
 .cc-combined > .cc-combined-side + .cc-combined-side {
   border-left: 1px solid var(--bt-stone);
 }
+/* Gutter between the chart content and the message column's divider. It lives
+   here rather than on the shared .cc-combined-side because the message column
+   pins its own head bar edge-to-edge and must stay unpadded. */
+.cc-chart-side {
+  padding-right: 24px;
+}
 
 /* — Panel — */
 .cc-panel {
@@ -515,7 +521,7 @@ body {
   padding: 20px;
 }
 .cc-panel-h1 {
-  font: 700 22px/1.3 var(--bt-font);
+  font: 700 26px/1.3 var(--bt-font);
   color: var(--bt-bowtie-blue);
   margin: 0 0 4px;
 }
@@ -1063,7 +1069,7 @@ input[type="number"]::-webkit-outer-spin-button {
 /* Matches .cc-panel-h1 so this title reads as a peer of the chart column's
    heading beside it — minus the margin, since it sits in a flex row. */
 .cc-msg-title {
-  font: 700 22px/1.3 var(--bt-font);
+  font: 700 26px/1.3 var(--bt-font);
   color: var(--bt-bowtie-blue);
 }
 .cc-msg-fold {
