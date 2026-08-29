@@ -287,14 +287,11 @@ export function MessagePanel({ plans, cv, onCollapse }: { plans: SelectedPlan[];
     }
   };
 
-  const sub = mode === 'plan' ? t('msg.subByPlan') : t('msg.subByCase');
-
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div>
           <h2 className="cc-panel-h1">{t('msg.title')}</h2>
-          <p className="cc-panel-sub">{sub}</p>
         </div>
         {onCollapse && (
           <button className="cc-icon-btn" title={t('msg.collapse')} onClick={onCollapse} style={{ flexShrink: 0 }}>
