@@ -293,12 +293,19 @@ body {
   background: var(--bt-pebble);
 }
 
-/* — App chrome — */
+/* — App chrome —
+   The whole app renders inside `#root { zoom: 0.85 }` (see the density tweak
+   below), so the header spec's px values would paint ~15% small. Every size in
+   this block is therefore the spec value ÷ 0.85 — i.e. `--bt-hd` — so the
+   topbar renders at exactly its designed size. Spec value noted per rule. */
+:root {
+  --bt-hd: 1.176; /* 1 / 0.85 — undoes the #root density zoom */
+}
 .cc-topbar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 18px 32px;
+  justify-content: space-between;
+  padding: calc(14px * var(--bt-hd)) calc(24px * var(--bt-hd));
   background: var(--bt-white);
   border-bottom: 1px solid var(--bt-stone);
   position: sticky;
@@ -308,26 +315,80 @@ body {
 .cc-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: calc(12px * var(--bt-hd));
 }
 .cc-wordmark {
-  font: 900 24px/1 var(--bt-font);
+  /* spec 18px */
+  font: 800 calc(18px * var(--bt-hd)) / 1 var(--bt-font);
   color: var(--bt-bowtie-blue);
-  letter-spacing: -0.01em;
+  letter-spacing: 0.02em;
 }
 .cc-tool-badge {
-  font: 700 12px/1 var(--bt-font);
+  /* spec 10px */
+  font: 700 calc(10px * var(--bt-hd)) / 1 var(--bt-font);
   color: var(--bt-bowtie-pink);
   background: var(--bt-blush);
-  padding: 6px 12px;
+  padding: calc(3px * var(--bt-hd)) calc(9px * var(--bt-hd));
   border-radius: var(--bt-radius-pill);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 .cc-topbar-right {
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: calc(18px * var(--bt-hd));
+}
+
+/* — Language switch: 64×28 pill with a sliding knob behind the EN/中 labels — */
+.cc-lang-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: calc(64px * var(--bt-hd));
+  height: calc(28px * var(--bt-hd));
+  padding: 0 calc(9px * var(--bt-hd));
+  border-radius: var(--bt-radius-pill);
+  border: 1.5px solid var(--bt-stone);
+  background: var(--bt-pebble);
+  cursor: pointer;
+}
+.cc-lang-switch:hover {
+  border-color: var(--bt-bowtie-pink);
+}
+.cc-lang-label {
+  position: relative;
+  z-index: 1;
+  /* spec 10px */
+  font: 700 calc(10px * var(--bt-hd)) / 1 var(--bt-font);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  user-select: none;
+}
+.cc-lang-knob {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: calc(22px * var(--bt-hd));
+  height: calc(22px * var(--bt-hd));
+  border-radius: 50%;
+  background: var(--bt-white);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transform: translateY(-50%);
+  transition: left var(--bt-duration-base) var(--bt-ease);
+}
+.cc-lang-switch.is-en .cc-lang-en,
+.cc-lang-switch.is-zh .cc-lang-zh {
+  color: var(--bt-bowtie-blue);
+}
+.cc-lang-switch.is-en .cc-lang-zh,
+.cc-lang-switch.is-zh .cc-lang-en {
+  color: var(--bt-rock);
+}
+.cc-lang-switch.is-zh .cc-lang-knob {
+  /* knob width + its 2px inset */
+  left: calc(100% - (22px * var(--bt-hd)) - 2px);
 }
 
 /* — Root shell: fixed viewport, panels scroll independently, page never scrolls — */
@@ -657,17 +718,25 @@ body {
   border-radius: 3px;
 }
 
-/* — Plain text button — */
+/* — Ghost pill button — */
 .cc-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(36px * var(--bt-hd));
+  padding: 0 calc(18px * var(--bt-hd));
+  border: 2px solid transparent;
+  border-radius: var(--bt-radius-pill);
   background: transparent;
-  border: 0;
-  font: 500 13px/1 var(--bt-font);
+  /* spec 13px */
+  font: 700 calc(13px * var(--bt-hd)) / 1 var(--bt-font);
   color: var(--bt-graphite);
   cursor: pointer;
-  padding: 6px 8px;
+  transition: all var(--bt-duration-fast) var(--bt-ease);
 }
 .cc-link:hover {
   color: var(--bt-bowtie-pink);
+  background: var(--bt-blush);
 }
 
 /* — Rail tabs styled as browser tabs (single row) — */

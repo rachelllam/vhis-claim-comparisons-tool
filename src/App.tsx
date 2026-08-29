@@ -139,29 +139,39 @@ function LeftRail({
   );
 }
 
+/* ── Language switch ───────────────────────────────────────────────
+   Pill toggle showing both languages at once; the knob slides to mark
+   the active one. `role="switch"` + `aria-checked` (rather than a
+   `title`, which is slow to appear and invisible to touch). */
+function LangSwitch() {
+  const { lang, toggle } = useLang();
+  return (
+    <button
+      type="button"
+      className={'cc-lang-switch ' + (lang === 'en' ? 'is-en' : 'is-zh')}
+      role="switch"
+      aria-checked={lang === 'zh'}
+      aria-label="Switch language · 切換語言"
+      onClick={toggle}
+    >
+      <span className="cc-lang-label cc-lang-en">EN</span>
+      <span className="cc-lang-label cc-lang-zh">中</span>
+      <span className="cc-lang-knob" aria-hidden="true" />
+    </button>
+  );
+}
+
 /* ── Top bar ───────────────────────────────────────────────────── */
 function CCTopBar({ onClearAll, showQuotes, setShowQuotes }: { onClearAll: () => void; showQuotes: boolean; setShowQuotes: (v: boolean) => void }) {
-  const { t, lang, toggle } = useLang();
+  const { t } = useLang();
   return (
     <div className="cc-topbar">
       <div className="cc-brand">
-        <span className="cc-wordmark">bowtie</span>
+        <span className="cc-wordmark">Bowtie</span>
         <span className="cc-tool-badge">{t('topbar.toolBadge')}</span>
       </div>
       <div className="cc-topbar-right">
-        <button
-          style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            minWidth: 40, padding: '6px 10px', borderRadius: 'var(--bt-radius-pill)',
-            border: '1.5px solid var(--bt-stone)', background: 'var(--bt-white)',
-            font: '700 13px/1 var(--bt-font)', color: 'var(--bt-bowtie-blue)', cursor: 'pointer',
-          }}
-          onClick={toggle}
-          aria-pressed={lang === 'zh'}
-          title="Switch language · 切換語言"
-        >
-          {lang === 'en' ? '中文' : 'EN'}
-        </button>
+        <LangSwitch />
         {SHOW_QUOTES_UI && (
           <>
             <span style={{ width: 1, height: 18, background: 'var(--bt-stone)' }}></span>
@@ -176,7 +186,6 @@ function CCTopBar({ onClearAll, showQuotes, setShowQuotes }: { onClearAll: () =>
             </button>
           </>
         )}
-        <span style={{ width: 1, height: 18, background: 'var(--bt-stone)' }}></span>
         <button className="cc-link" onClick={onClearAll}>
           {t('topbar.clearAll')}
         </button>
