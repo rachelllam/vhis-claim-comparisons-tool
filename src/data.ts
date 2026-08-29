@@ -129,9 +129,18 @@ export interface OperationData {
   treatmentDetails: Record<string, TreatmentDetail>;
 }
 
+// The Drop origin is behind Cloudflare Access, which a cross-origin fetch from
+// localhost cannot satisfy — in dev we go through Vite's server-side proxy
+// instead (see vite.config.ts). Deployed we're same-origin with Drop.
 export const OPERATIONS_URL =
   import.meta.env.VITE_OPERATIONS_URL ??
-  'https://rachellam.drop.ai.bowtie.hk/common-operation-data/operations.json';
+  (import.meta.env.DEV
+    ? '/drop-data'
+    : 'https://rachellam.drop.ai.bowtie.hk/common-operation-data/operations.json');
+
+// The dev proxy turns an Access login redirect into a 511 (vite.config.ts).
+export const ACCESS_HINT =
+  'Cloudflare Access rejected the request. Set CF_ACCESS_COOKIE (or CF_ACCESS_CLIENT_ID/SECRET) in .env.local and restart the dev server — see vite.config.ts.';
 
 // English/text field → itself, or 'N/A' when empty/missing.
 const na = (s: string | null | undefined): string => (s && s.trim() ? s : 'N/A');
@@ -232,6 +241,7 @@ export function transformOperations(raw: OperationRecord[]): OperationData {
 // Fetch + transform the operation data from the endpoint.
 export async function fetchOperationData(signal?: AbortSignal): Promise<OperationData> {
   const res = await fetch(OPERATIONS_URL, { signal });
+  if (res.status === 511) throw new Error(ACCESS_HINT);
   if (!res.ok) throw new Error(`Operations fetch failed: ${res.status} ${res.statusText}`);
   const raw = (await res.json()) as OperationRecord[];
   return transformOperations(raw);
