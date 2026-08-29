@@ -18,8 +18,6 @@ import { CoverageTabsBar } from './components/CoverageTabsBar';
 import { ChartPanel } from './components/ChartPanel';
 import { MessagePanel } from './components/MessagePanel';
 
-type MsgState = 'open' | 'collapsed' | 'wide';
-
 // Quotation (indicative monthly premium) UI is hidden from the screen but its
 // logic/state/types stay wired — flip this back to re-enable everything.
 const SHOW_QUOTES_UI = false;
@@ -34,38 +32,6 @@ interface AboutProps {
   profile: Profile;
   setProfile: (p: Profile) => void;
   showQuotes: boolean;
-}
-
-/* ── Expandable message sidebar ─────────────────────────────────── */
-function MessageSidebar({
-  state,
-  setState,
-  plans,
-  cv,
-}: {
-  state: MsgState;
-  setState: (s: MsgState) => void;
-  plans: SelectedPlan[];
-  cv: CoverageView;
-}) {
-  const { t } = useLang();
-  if (state === 'collapsed') {
-    return (
-      <div className="cc-msg-rail" onClick={() => setState('open')} title={t('msg.showMessage')} role="button">
-        <span className="cc-icon-btn" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"></path>
-          </svg>
-        </span>
-        <span className="cc-msg-rail-label">{t('msg.title')}</span>
-      </div>
-    );
-  }
-  return (
-    <div style={{ position: 'relative' }}>
-      <MessagePanel plans={plans} cv={cv} onCollapse={() => setState('collapsed')} />
-    </div>
-  );
 }
 
 /* ── "About me" tab content ────────────────────────────────────── */
@@ -217,7 +183,7 @@ function CoverageApp() {
   const toggleCase = (id: string) =>
     setSelectedCaseIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
-  const [msgState, setMsgState] = useState<MsgState>('open');
+  const [msgCollapsed, setMsgCollapsed] = useState(false);
   const [coverageMode, setCoverageMode] = useState<CoverageMode>('case');
   const [focusPlanId, setFocusPlanId] = useState<string | null>('flexi-sup');
   const [focusPlanDeductible, setFocusPlanDeductible] = useState<number | null>(0);
@@ -284,7 +250,8 @@ function CoverageApp() {
     selectedCaseIds,
   };
 
-  const msgCol = msgState === 'collapsed' ? 52 : msgState === 'wide' ? 560 : 380;
+  // Collapsed still needs room for the fold chevron plus the head's padding.
+  const msgCol = msgCollapsed ? 52 : 380;
 
   return (
     <>
@@ -302,8 +269,13 @@ function CoverageApp() {
               <div className="cc-combined-side">
                 <ChartPanel plans={plans} onRemove={removePlan} onRemoveCase={toggleCase} cv={cv} quoteCtx={quoteCtx} />
               </div>
-              <div className="cc-combined-side cc-msg-side" style={msgState === 'collapsed' ? { padding: 0 } : undefined}>
-                <MessageSidebar state={msgState} setState={setMsgState} plans={plans} cv={cv} />
+              <div className={'cc-combined-side cc-msg-side' + (msgCollapsed ? ' is-collapsed' : '')}>
+                <MessagePanel
+                  plans={plans}
+                  cv={cv}
+                  collapsed={msgCollapsed}
+                  onToggleCollapse={() => setMsgCollapsed((v) => !v)}
+                />
               </div>
             </div>
           </div>

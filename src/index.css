@@ -478,7 +478,6 @@ body {
   min-height: 0;
 }
 .cc-combined > .cc-combined-side {
-  padding: 24px;
   min-height: 0;
   overflow-y: auto;
 }
@@ -971,70 +970,147 @@ input[type="number"]::-webkit-outer-spin-button {
   cursor: pointer;
 }
 
-/* — Expandable message sidebar — */
+/* — Message sidebar —
+   Overrides the scroll .cc-combined-side sets: here the head is pinned and the
+   body flexes, so the textarea scrolls rather than the whole column. */
 .cc-msg-side {
   position: relative;
-}
-.cc-msg-ctrls {
-  position: absolute;
-  top: 22px;
-  right: 20px;
+  overflow: hidden;
   display: flex;
-  gap: 6px;
-  z-index: 2;
+  flex-direction: column;
+  min-height: 0;
 }
-.cc-icon-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--bt-radius-s);
-  border: 1px solid var(--bt-stone);
-  background: var(--bt-white);
+.cc-msg-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.cc-msg-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px 16px;
+}
+.cc-msg-head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+/* Matches .cc-panel-h1 so this title reads as a peer of the chart column's
+   heading beside it — minus the margin, since it sits in a flex row. */
+.cc-msg-title {
+  font: 700 22px/1.3 var(--bt-font);
+  color: var(--bt-bowtie-blue);
+}
+.cc-msg-fold {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  /* 6px each side leaves exactly the 20px the chevron needs (border-box). */
+  padding: 6px;
+  border: 0;
+  border-radius: var(--bt-radius-xs);
+  background: none;
   color: var(--bt-graphite);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all var(--bt-duration-fast) var(--bt-ease);
-  padding: 0;
 }
-.cc-icon-btn:hover {
-  border-color: var(--bt-bowtie-pink);
-  color: var(--bt-bowtie-pink);
+.cc-msg-fold:hover {
+  background: var(--bt-pebble);
 }
-.cc-icon-btn svg {
-  width: 16px;
-  height: 16px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.cc-msg-chevron {
+  transition: transform var(--bt-duration-fast) var(--bt-ease);
 }
-.cc-msg-rail {
+.cc-msg-body {
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 14px;
-  padding: 22px 0;
-  cursor: pointer;
-  height: 100%;
+  overflow: hidden;
+}
+.cc-msg-textarea {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--bt-stone);
+  border-radius: var(--bt-radius-s);
+  background: var(--bt-pebble);
+  /* The generated body is mostly CJK, so this keeps the Chinese face and
+     normal wrapping instead of the spec's monospace + white-space: pre. */
+  font: 400 13px/1.7 var(--bt-font-zh);
+  color: var(--bt-ink);
+  resize: none;
+  outline: none;
   box-sizing: border-box;
+  transition: border-color var(--bt-duration-fast) var(--bt-ease);
+}
+.cc-msg-textarea:focus {
+  border-color: var(--bt-bowtie-pink);
   background: var(--bt-white);
-  transition: background var(--bt-duration-fast) var(--bt-ease);
 }
-.cc-msg-rail:hover {
-  background: var(--bt-blush);
+.cc-msg-footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
 }
-.cc-msg-rail:hover .cc-icon-btn {
+.cc-msg-length {
+  font: 500 11px/1 var(--bt-font);
+  color: var(--bt-graphite);
+}
+
+/* — Copy button — */
+.cc-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1.5px solid var(--bt-stone);
+  border-radius: var(--bt-radius-pill);
+  background: var(--bt-white);
+  font: 600 13px/1 var(--bt-font);
+  color: var(--bt-bowtie-blue);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--bt-duration-fast) var(--bt-ease);
+}
+.cc-copy-btn:hover:not(:disabled) {
   border-color: var(--bt-bowtie-pink);
   color: var(--bt-bowtie-pink);
 }
-.cc-msg-rail-label {
-  writing-mode: vertical-rl;
+.cc-copy-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.cc-copy-btn.is-done {
+  background: var(--bt-green-day-light);
+  border-color: var(--bt-green-day);
+  color: var(--bt-green-day);
+}
+
+/* Collapsed: the head bar stays, everything else folds away. */
+.cc-msg-side.is-collapsed .cc-msg-head {
+  justify-content: center;
+}
+.cc-msg-side.is-collapsed .cc-msg-title,
+.cc-msg-side.is-collapsed .cc-copy-btn,
+.cc-msg-side.is-collapsed .cc-msg-body {
+  display: none;
+}
+.cc-msg-side.is-collapsed .cc-msg-chevron {
   transform: rotate(180deg);
-  font: 700 13px/1 var(--bt-font);
-  color: var(--bt-bowtie-blue);
-  letter-spacing: 0.04em;
 }
 
 /* — Loading spinner (operation-data fetch gate) — */

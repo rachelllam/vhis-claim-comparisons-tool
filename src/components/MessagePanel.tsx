@@ -1,6 +1,5 @@
 // Right panel — WhatsApp message composer, adapts to "By case" / "By plan".
-import { useState, useMemo, useEffect } from 'react';
-import type { CSSProperties } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { SURGERY_TIERS, VHIS_PLANS, fmtHK, fmtHKShort, fmtHKWan, tierIndex } from '../data';
 import type { SurgeryCase, VhisPlan } from '../data';
 import { computeSurgeryPayout, isFlexiPremium, smmTerms } from '../benefitSchedule';
@@ -13,23 +12,6 @@ import type { Lang, StringKey } from '../i18n';
 import type { SelectedPlan, CoverageView } from '../types';
 
 type T = (key: StringKey) => string;
-
-const ccMsgStylesV2 = {
-  textarea: {
-    width: '100%', minHeight: 460, padding: 14,
-    background: 'var(--bt-pebble)', border: '1px solid var(--bt-stone)',
-    borderRadius: 'var(--bt-radius-m)', font: '400 13px/1.7 var(--bt-font)',
-    color: 'var(--bt-ink)', outline: 'none', resize: 'vertical',
-    boxSizing: 'border-box', fontFamily: 'var(--bt-font-zh)',
-  } as CSSProperties,
-  footerRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, gap: 8 } as CSSProperties,
-  charCount: { font: '500 11px/1 var(--bt-font)', color: 'var(--bt-graphite)' } as CSSProperties,
-  primaryBtn: {
-    background: 'var(--bt-bowtie-pink)', border: 0, borderRadius: 'var(--bt-radius-pill)',
-    padding: '10px 20px', font: '700 13px/1 var(--bt-font)', color: 'var(--bt-white)',
-    cursor: 'pointer', transition: 'background var(--bt-duration-fast) var(--bt-ease)', whiteSpace: 'nowrap',
-  } as CSSProperties,
-};
 
 // One payout block — shows the working, not just the total: the base surgical
 // caps, the SMM top-up, then the total with its share of the bill. Flexi Premium
@@ -235,7 +217,17 @@ function buildByPlan({
   return lines.join('\n');
 }
 
-export function MessagePanel({ plans, cv, onCollapse }: { plans: SelectedPlan[]; cv: CoverageView; onCollapse?: () => void }) {
+export function MessagePanel({
+  plans,
+  cv,
+  collapsed,
+  onToggleCollapse,
+}: {
+  plans: SelectedPlan[];
+  cv: CoverageView;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+}) {
   const { cases: allCases } = useOperationData();
   const { lang, t } = useLang();
   const mode = cv ? cv.mode : 'case';
@@ -277,48 +269,64 @@ export function MessagePanel({ plans, cv, onCollapse }: { plans: SelectedPlan[];
     setDraft(val);
     setDirty(true);
   };
+  // Held in a ref so the "Copied" reset can be cancelled if we unmount first.
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
   const onCopy = async () => {
     try {
       await navigator.clipboard.writeText(draft);
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 1500);
     } catch {
       /* clipboard unavailable */
     }
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-        <div>
-          <h2 className="cc-panel-h1">{t('msg.title')}</h2>
-        </div>
-        {onCollapse && (
-          <button className="cc-icon-btn" title={t('msg.collapse')} onClick={onCollapse} style={{ flexShrink: 0 }}>
-            <svg viewBox="0 0 24 24">
-              <path d="M9 6l6 6-6 6"></path>
+    <div className="cc-msg-panel">
+      <div className="cc-msg-head">
+        <span className="cc-msg-head-left">
+          <button
+            type="button"
+            className="cc-msg-fold"
+            aria-expanded={!collapsed}
+            title={collapsed ? t('msg.showMessage') : t('msg.collapse')}
+            onClick={onToggleCollapse}
+          >
+            <svg className="cc-msg-chevron" width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M6 4 L10 8 L6 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"></path>
             </svg>
           </button>
-        )}
-      </div>
-
-      <textarea
-        style={ccMsgStylesV2.textarea}
-        value={draft}
-        onChange={(e) => onEdit(e.target.value)}
-        placeholder={t('msg.placeholder')}
-      />
-
-      <div style={ccMsgStylesV2.footerRow}>
-        <span style={ccMsgStylesV2.charCount}>
-          {draft.length} {t('msg.chars')} {dirty && <span style={{ color: 'var(--bt-yellow-submarine)' }}>{t('msg.edited')}</span>}
+          <span className="cc-msg-title">{t('msg.title')}</span>
         </span>
         <button
-          style={{ ...ccMsgStylesV2.primaryBtn, background: copied ? 'var(--bt-green-day)' : 'var(--bt-bowtie-pink)' }}
+          type="button"
+          className={'cc-copy-btn' + (copied ? ' is-done' : '')}
+          disabled={!draft}
           onClick={onCopy}
         >
-          {copied ? t('msg.copied') : t('msg.copy')}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect x="4" y="4" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"></rect>
+            <rect x="2.5" y="2.5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" fill="var(--bt-white)"></rect>
+          </svg>
+          <span>{copied ? t('msg.copied') : t('msg.copy')}</span>
         </button>
+      </div>
+
+      <div className="cc-msg-body">
+        <textarea
+          className="cc-msg-textarea"
+          spellCheck={false}
+          value={draft}
+          onChange={(e) => onEdit(e.target.value)}
+          placeholder={t('msg.placeholder')}
+        />
+        <div className="cc-msg-footer">
+          <span className="cc-msg-length">
+            {draft.length} {t('msg.chars')} {dirty && <span style={{ color: 'var(--bt-yellow-submarine)' }}>{t('msg.edited')}</span>}
+          </span>
+        </div>
       </div>
     </div>
   );
