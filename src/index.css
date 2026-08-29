@@ -299,7 +299,7 @@ body {
    this block is therefore the spec value ÷ 0.85 — i.e. `--bt-hd` — so the
    topbar renders at exactly its designed size. Spec value noted per rule. */
 :root {
-  --bt-hd: 1.176; /* 1 / 0.85 — undoes the #root density zoom */
+  --bt-hd: calc(1 / 0.85); /* undoes the #root density zoom */
 }
 .cc-topbar {
   display: flex;
@@ -1185,6 +1185,11 @@ input[type="number"]::-webkit-outer-spin-button {
 /* Collapsed: the head bar stays, everything else folds away. */
 .cc-msg-side.is-collapsed .cc-msg-head {
   justify-content: center;
+  /* The 52px collapsed column can't fit the 32px fold button plus 16px of
+     padding each side, so drop the padding rather than let the button
+     overflow its content box. */
+  padding-left: 0;
+  padding-right: 0;
 }
 .cc-msg-side.is-collapsed .cc-msg-title,
 .cc-msg-side.is-collapsed .cc-copy-btn,

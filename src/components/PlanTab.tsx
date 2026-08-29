@@ -189,9 +189,12 @@ function CCPlanPicker({
         <div className="fp-blockhead">
           <span className="fp-title">{t("plan.pinkPlan")}</span>
         </div>
+        {/* Not role="grid": the ARIA grid pattern needs role="row" wrappers,
+            which would break the CSS grid these buttons are direct children
+            of. Each button carries a full aria-label instead, so a cell reads
+            as "半私家 · $20K" rather than a bare "$20K". */}
         <div
           className="fp-matrix"
-          role="grid"
           style={ccPlanStyles.matrixCols(pinkDeductibles.length)}
         >
           <div className="fp-corner" aria-hidden="true"></div>
@@ -200,8 +203,8 @@ function CCPlanPicker({
               key={"h" + d}
               type="button"
               className="fp-colhead"
-              role="columnheader"
               title={`${dedColLabel(d)} · ${t("plan.pinkBulkSuffix")}`}
+              aria-label={`${dedColLabel(d)} · ${t("plan.pinkBulkSuffix")}`}
               onClick={() => selectDeductible(d)}
               onMouseEnter={() => setHoverCol(d)}
               onMouseLeave={() => setHoverCol(null)}
@@ -215,7 +218,6 @@ function CCPlanPicker({
                 <button
                   type="button"
                   className="fp-rowhead"
-                  role="rowheader"
                   style={{
                     flexDirection: "column",
                     alignItems: "flex-start",
@@ -223,6 +225,7 @@ function CCPlanPicker({
                     justifyContent: "center",
                   }}
                   title={`${wardLabel(plan.ward, t)} · ${t("plan.pinkBulkSuffix")}`}
+                  aria-label={`${wardLabel(plan.ward, t)} · ${t("plan.pinkBulkSuffix")}`}
                   onClick={() => selectWard(plan.id, plan.deductibles)}
                   onMouseEnter={() => setHoverRow(plan.id)}
                   onMouseLeave={() => setHoverRow(null)}
@@ -254,6 +257,7 @@ function CCPlanPicker({
                       }
                       aria-pressed={isSel}
                       title={`${wardLabel(plan.ward, t)} · ${dedColLabel(d)}`}
+                      aria-label={`${wardLabel(plan.ward, t)} · ${dedColLabel(d)}`}
                       onClick={() => onSelectPink(plan.id, d)}
                     >
                       {dedColLabel(d)}

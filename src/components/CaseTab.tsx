@@ -80,7 +80,7 @@ function CCSegField({
               key={opt.id}
               type="button"
               className={'fp-seg' + (on ? ' is-active' : '')}
-              aria-current={on || undefined}
+              aria-pressed={on}
               onClick={() => onChange(opt.id)}
             >
               {opt.label}
