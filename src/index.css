@@ -617,8 +617,9 @@ body {
 .fp-seg-switch {
   display: inline-flex;
   align-items: center;
-  /* The age field has six bands; wrapping keeps the track inside the rail
-     instead of overflowing it on a narrow column. */
+  /* Safety net for natural-width tracks (gender): wrapping keeps them inside
+     the rail instead of overflowing on a narrow column. The age track opts out
+     via .is-fill below. */
   flex-wrap: wrap;
   max-width: 100%;
   gap: 2px;
@@ -641,6 +642,21 @@ body {
   white-space: nowrap;
   cursor: pointer;
   transition: all var(--bt-duration-fast) var(--bt-ease);
+}
+/* Seven age bands don't fit the 340px rail at natural label widths, so the age
+   track divides its width evenly rather than wrapping to a second row. Tighter
+   padding and no tracking buy back the ~40px the seventh segment costs. */
+.fp-seg-switch.is-fill {
+  display: flex;
+  width: 100%;
+  flex-wrap: nowrap;
+  gap: 1px;
+}
+.fp-seg-switch.is-fill .fp-seg {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 calc(4px * var(--bt-hd));
+  letter-spacing: 0;
 }
 .fp-seg:hover:not(.is-active) {
   color: var(--bt-graphite);
