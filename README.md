@@ -20,3 +20,40 @@ The design medium is **HTML/CSS/JS** — these are prototypes, not production co
 
 - `claim-comparison/README.md` — this file
 - `claim-comparison/project/` — the `Claim Comparison` project files (HTML prototypes, assets, components)
+
+## Local dev — Cloudflare Access setup
+
+Both data endpoints live on Bowtie Drop behind Cloudflare Access:
+
+- operation data — `https://rachellam.drop.ai.bowtie.hk/common-operation-data/operations.json`
+- benefit schedules — `https://drop.ai.bowtie.hk/proxy`
+
+Deployed, the app is same-origin with Drop, so the browser sends its
+`CF_Authorization` cookie automatically. From `localhost` the fetch is
+cross-origin and carries no credentials, so Access answers `302` →
+`bowtie.cloudflareaccess.com`, which has no CORS headers — the browser reports
+that as `TypeError: Failed to fetch`.
+
+So `npm run dev` routes both endpoints through Vite's server-side proxy
+(`/drop-data`, `/drop-proxy` — see `vite.config.ts`), which attaches Access
+credentials from a gitignored `.env.local`:
+
+```sh
+# Option A — reuse your own browser session. Log in to
+# https://drop.ai.bowtie.hk, then DevTools → Application → Cookies →
+# https://drop.ai.bowtie.hk and copy the CF_Authorization value.
+# It expires (typically 24h); re-copy when the Access error reappears.
+CF_ACCESS_COOKIE=<CF_Authorization cookie value>
+
+# Option B — a Cloudflare Access service token, if one has been issued for
+# these apps. Preferred: it doesn't expire daily. Ask the team that owns
+# Bowtie Drop; don't reuse a token issued for another app.
+CF_ACCESS_CLIENT_ID=<id>.access
+CF_ACCESS_CLIENT_SECRET=<secret>
+```
+
+Restart the dev server after editing `.env.local`. The proxy collapses an Access
+login redirect into a `511`, which the app surfaces as an actionable
+"Cloudflare Access rejected the request" message rather than an opaque fetch
+failure. Note the Access policy on these apps also expects the WARP client to be
+running and logged in.
