@@ -18,8 +18,6 @@ import { CoverageTabsBar } from './components/CoverageTabsBar';
 import { ChartPanel } from './components/ChartPanel';
 import { MessagePanel } from './components/MessagePanel';
 
-type MsgState = 'open' | 'collapsed' | 'wide';
-
 // Quotation (indicative monthly premium) UI is hidden from the screen but its
 // logic/state/types stay wired — flip this back to re-enable everything.
 const SHOW_QUOTES_UI = false;
@@ -34,38 +32,6 @@ interface AboutProps {
   profile: Profile;
   setProfile: (p: Profile) => void;
   showQuotes: boolean;
-}
-
-/* ── Expandable message sidebar ─────────────────────────────────── */
-function MessageSidebar({
-  state,
-  setState,
-  plans,
-  cv,
-}: {
-  state: MsgState;
-  setState: (s: MsgState) => void;
-  plans: SelectedPlan[];
-  cv: CoverageView;
-}) {
-  const { t } = useLang();
-  if (state === 'collapsed') {
-    return (
-      <div className="cc-msg-rail" onClick={() => setState('open')} title={t('msg.showMessage')} role="button">
-        <span className="cc-icon-btn" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"></path>
-          </svg>
-        </span>
-        <span className="cc-msg-rail-label">{t('msg.title')}</span>
-      </div>
-    );
-  }
-  return (
-    <div style={{ position: 'relative' }}>
-      <MessagePanel plans={plans} cv={cv} onCollapse={() => setState('collapsed')} />
-    </div>
-  );
 }
 
 /* ── "About me" tab content ────────────────────────────────────── */
@@ -139,29 +105,45 @@ function LeftRail({
   );
 }
 
+/* ── Language switch ───────────────────────────────────────────────
+   Pill toggle showing both languages at once; the knob slides to mark
+   the active one. `role="switch"` + `aria-checked` (rather than a
+   `title`, which is slow to appear and invisible to touch). */
+function LangSwitch() {
+  const { lang, toggle } = useLang();
+  return (
+    <button
+      type="button"
+      className={'cc-lang-switch ' + (lang === 'en' ? 'is-en' : 'is-zh')}
+      role="switch"
+      aria-checked={lang === 'zh'}
+      aria-label="Switch language · 切換語言"
+      onClick={toggle}
+    >
+      <span className="cc-lang-label cc-lang-en">EN</span>
+      <span className="cc-lang-label cc-lang-zh">中</span>
+      <span className="cc-lang-knob" aria-hidden="true" />
+    </button>
+  );
+}
+
+/* ── Estimate disclaimer ───────────────────────────────────────── */
+function EstimateNote() {
+  const { t } = useLang();
+  return <div className="cc-note">{t('chart.estimateDisclaimer')}</div>;
+}
+
 /* ── Top bar ───────────────────────────────────────────────────── */
 function CCTopBar({ onClearAll, showQuotes, setShowQuotes }: { onClearAll: () => void; showQuotes: boolean; setShowQuotes: (v: boolean) => void }) {
-  const { t, lang, toggle } = useLang();
+  const { t } = useLang();
   return (
     <div className="cc-topbar">
       <div className="cc-brand">
-        <span className="cc-wordmark">bowtie</span>
+        <span className="cc-wordmark">Bowtie</span>
         <span className="cc-tool-badge">{t('topbar.toolBadge')}</span>
       </div>
       <div className="cc-topbar-right">
-        <button
-          style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            minWidth: 40, padding: '6px 10px', borderRadius: 'var(--bt-radius-pill)',
-            border: '1.5px solid var(--bt-stone)', background: 'var(--bt-white)',
-            font: '700 13px/1 var(--bt-font)', color: 'var(--bt-bowtie-blue)', cursor: 'pointer',
-          }}
-          onClick={toggle}
-          aria-pressed={lang === 'zh'}
-          title="Switch language · 切換語言"
-        >
-          {lang === 'en' ? '中文' : 'EN'}
-        </button>
+        <LangSwitch />
         {SHOW_QUOTES_UI && (
           <>
             <span style={{ width: 1, height: 18, background: 'var(--bt-stone)' }}></span>
@@ -176,7 +158,6 @@ function CCTopBar({ onClearAll, showQuotes, setShowQuotes }: { onClearAll: () =>
             </button>
           </>
         )}
-        <span style={{ width: 1, height: 18, background: 'var(--bt-stone)' }}></span>
         <button className="cc-link" onClick={onClearAll}>
           {t('topbar.clearAll')}
         </button>
@@ -208,7 +189,7 @@ function CoverageApp() {
   const toggleCase = (id: string) =>
     setSelectedCaseIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
-  const [msgState, setMsgState] = useState<MsgState>('open');
+  const [msgCollapsed, setMsgCollapsed] = useState(false);
   const [coverageMode, setCoverageMode] = useState<CoverageMode>('case');
   const [focusPlanId, setFocusPlanId] = useState<string | null>('flexi-sup');
   const [focusPlanDeductible, setFocusPlanDeductible] = useState<number | null>(0);
@@ -275,12 +256,14 @@ function CoverageApp() {
     selectedCaseIds,
   };
 
-  const msgCol = msgState === 'collapsed' ? 52 : msgState === 'wide' ? 560 : 380;
+  // Collapsed still needs room for the fold chevron plus the head's padding.
+  const msgCol = msgCollapsed ? 52 : 380;
 
   return (
     <>
       <CCTopBar onClearAll={onClearAll} showQuotes={showQuotes} setShowQuotes={setShowQuotes} />
       <div className="cc-main">
+        <EstimateNote />
         <div className="cc-area-left">
           <div className="cc-panel">
             <LeftRail configProps={configProps} caseProps={caseProps} aboutProps={aboutProps} />
@@ -290,11 +273,16 @@ function CoverageApp() {
           <div className="cc-combined-wrap">
             <CoverageTabsBar plans={plans} cv={cv} onRemove={removePlan} onRemoveCase={toggleCase} />
             <div className="cc-panel cc-combined" style={{ gridTemplateColumns: `1fr ${msgCol}px` }}>
-              <div className="cc-combined-side">
+              <div className="cc-combined-side cc-chart-side">
                 <ChartPanel plans={plans} onRemove={removePlan} onRemoveCase={toggleCase} cv={cv} quoteCtx={quoteCtx} />
               </div>
-              <div className="cc-combined-side cc-msg-side" style={msgState === 'collapsed' ? { padding: 0 } : undefined}>
-                <MessageSidebar state={msgState} setState={setMsgState} plans={plans} cv={cv} />
+              <div className={'cc-combined-side cc-msg-side' + (msgCollapsed ? ' is-collapsed' : '')}>
+                <MessagePanel
+                  plans={plans}
+                  cv={cv}
+                  collapsed={msgCollapsed}
+                  onToggleCollapse={() => setMsgCollapsed((v) => !v)}
+                />
               </div>
             </div>
           </div>

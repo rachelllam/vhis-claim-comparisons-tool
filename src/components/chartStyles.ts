@@ -42,14 +42,8 @@ export const ccChartStyles = {
   paysSub: { display: 'block', font: '400 11px/1.2 var(--bt-font)', color: 'var(--bt-graphite)', marginTop: 2 } as CSSProperties,
   paysValue: (zero: boolean): CSSProperties => ({ font: '700 24px/1 var(--bt-font)', color: zero ? 'var(--bt-hotel-california)' : 'var(--bt-green-day)', whiteSpace: 'nowrap' }),
 
-  // — estimate disclaimer —
-  warningBox: {
-    display: 'flex', alignItems: 'flex-start', gap: 10,
-    marginBottom: 18, padding: '13px 16px', borderRadius: 'var(--bt-radius-s)',
-    background: 'var(--bt-yellow-submarine-light)',
-    border: '1px solid var(--bt-yellow-submarine)',
-  } as CSSProperties,
-  warningText: { font: '500 12px/1.5 var(--bt-font)', color: 'var(--bt-ink)' } as CSSProperties,
+  // The estimate disclaimer moved out to the page-level `.cc-note` banner in
+  // .cc-main, so it no longer scrolls away with the result cards.
 
   youPayRow: { display: 'flex', justifyContent: 'space-between', gap: 12, marginTop: 10, padding: '0 2px' } as CSSProperties,
   youPayLabel: { font: '500 12px/1 var(--bt-font)', color: 'var(--bt-graphite)' } as CSSProperties,
