@@ -22,6 +22,8 @@ const en = {
   "common.none": "None",
   "common.dayCase": "Day case",
   "common.noCap": "No cap",
+  "common.notApplicable": "N/A",
+  "common.noRestriction": "No restriction",
   "common.perMonth": "/mo",
   "common.removeFromComparison": "Remove from comparison",
   "common.addToComparison": "Add to comparison",
@@ -91,10 +93,13 @@ const en = {
   "chart.nights": "nights",
   "chart.planLabel": "Plan",
   "chart.annualBenefitLimit": "Annual benefit limit",
-  // Second ceiling shown beneath the annual limit — whichever one the product
-  // actually carries (SMM rider for Flexi Regular/Plus, lifetime cap for Pink).
-  "chart.smmLimitTpl": "SMM limit {amount} a year",
-  "chart.lifetimeLimitTpl": "Lifetime limit {amount}",
+  // Shown for every plan, whether or not it carries them: a plan with no SMM
+  // rider reads "None", and one with no lifetime cap reads "No cap".
+  "chart.smmLimit": "SMM limit",
+  "chart.lifetimeLimit": "Lifetime limit",
+  // Ward class only bites on the SMM top-up for the tiered plans — the plan
+  // itself doesn't restrict which ward you stay in.
+  "chart.smmWardOnlyTpl": "SMM covers {ward} only",
   "chart.wardClass": "Ward class",
   "chart.internal": "Internal",
   "chart.internalDetails": "Internal details",
@@ -230,6 +235,8 @@ const zh: Record<StringKey, string> = {
   "common.none": "無",
   "common.dayCase": "日間手術",
   "common.noCap": "無上限",
+  "common.notApplicable": "不適用",
+  "common.noRestriction": "無限制",
   "common.perMonth": "/月",
   "common.removeFromComparison": "從比較中移除",
   "common.addToComparison": "加入比較",
@@ -297,8 +304,9 @@ const zh: Record<StringKey, string> = {
   "chart.nights": "晚",
   "chart.planLabel": "計劃",
   "chart.annualBenefitLimit": "每年保障限額",
-  "chart.smmLimitTpl": "SMM 保障上限：每年 {amount}",
-  "chart.lifetimeLimitTpl": "終身保障限額 {amount}",
+  "chart.smmLimit": "SMM 保障上限",
+  "chart.lifetimeLimit": "終身保障限額",
+  "chart.smmWardOnlyTpl": "SMM 保障只適用於{ward}",
   "chart.wardClass": "病房級別",
   "chart.internal": "手術詳情",
   "chart.internalDetails": "手術詳情",

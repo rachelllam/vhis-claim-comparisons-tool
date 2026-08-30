@@ -24,43 +24,67 @@ import { LockIcon, InternalDetailModal } from './InternalDetailModal';
 const nightsLabel = (days: number, t: (k: StringKey) => string) =>
   days === 0 ? t('common.dayCase') : `${days} ${t(days === 1 ? 'chart.night' : 'chart.nights')}`;
 
-// Plan-terms strip cell: the ceilings the focused plan actually carries, read
-// from its live benefit schedule rather than the static VHIS_PLANS table.
-// Which second ceiling applies falls out of the schedule's own shape:
-//  - VHIS Standard — annual limit only (no SMM rider, no lifetime cap).
+// Plan-terms strip cells: the three ceilings plus the ward class, read from the
+// focused plan's live benefit schedule rather than the static VHIS_PLANS table.
+// All three limits show for every plan so the same numbers can be compared
+// across plans — a plan that lacks one says so instead of leaving a gap:
+//  - VHIS Standard — annual limit only; no SMM rider, no lifetime cap.
 //  - Flexi Regular / Flexi Plus — annual limit + the SMM rider's annual ceiling.
 //  - Flexi Premium ("Pink") — annual limit + lifetime limit.
+// "No cap" and "N/A" are deliberately different words: an absent lifetime cap
+// means lifetime coverage is unlimited, which is the opposite of an absent rider.
+//
+// Ward class reads the same way. Only Flexi Premium buys a ward — the tiered
+// plans pay by surgery type wherever you stay, so they show "No restriction",
+// with the ward named in the remark for the ones whose SMM top-up is the part
+// the ward class actually limits.
+//
 // Its own component so the hook lives in a real component body — the by-plan
 // branch it renders in sits after the by-case early return, where a hook can't go.
-function PlanLimitsCell({ planId, deductible }: { planId: string; deductible: number }) {
+function PlanTermCells({ plan, deductible }: { plan: VhisPlan; deductible: number }) {
   const { t } = useLang();
-  const { schedule, error, loading } = useBenefitSchedule(planId, deductible);
+  const { schedule, error, loading } = useBenefitSchedule(plan.id, deductible);
+  // By id, not isFlexiPremium(schedule), so the ward cell is right from the
+  // first paint instead of flipping once the schedule lands.
+  const isPink = plan.id.startsWith('pink');
+  const dash = '—';
 
-  if (!schedule) {
-    return (
-      <div style={ccV2.stripCell}>
-        <span style={ccV2.stripKicker}>{t('chart.annualBenefitLimit')}</span>
-        <span style={ccV2.stripBlue}>—</span>
-        <span style={ccV2.stripSmall}>
-          {error ? t('chart.scheduleErrorTitle') : loading ? t('chart.scheduleLoading') : ''}
-        </span>
-      </div>
-    );
-  }
-
-  const secondary =
-    schedule.lifetime_limit != null
-      ? t('chart.lifetimeLimitTpl').replace('{amount}', fmtHKShort(schedule.lifetime_limit))
-      : schedule.smm_annual_limit > 0
-        ? t('chart.smmLimitTpl').replace('{amount}', fmtHKShort(schedule.smm_annual_limit))
-        : '';
+  const cells: { label: string; value: string; remark?: string; big?: boolean }[] = [
+    {
+      label: t('chart.annualBenefitLimit'),
+      value: schedule ? fmtHKShort(schedule.annual_limit) : dash,
+      // One status line for the whole group, not the same message three times over.
+      remark: schedule ? '' : error ? t('chart.scheduleErrorTitle') : loading ? t('chart.scheduleLoading') : '',
+    },
+    {
+      label: t('chart.smmLimit'),
+      value: !schedule ? dash : schedule.smm_annual_limit > 0 ? fmtHKShort(schedule.smm_annual_limit) : t('common.notApplicable'),
+    },
+    {
+      label: t('chart.lifetimeLimit'),
+      value: !schedule ? dash : schedule.lifetime_limit != null ? fmtHKShort(schedule.lifetime_limit) : t('common.noCap'),
+    },
+    {
+      label: t('chart.wardClass'),
+      value: isPink ? wardLabel(plan.ward, t) : t('common.noRestriction'),
+      remark:
+        !isPink && schedule && schedule.smm_annual_limit > 0
+          ? t('chart.smmWardOnlyTpl').replace('{ward}', wardLabel(plan.ward, t))
+          : '',
+      big: true,
+    },
+  ];
 
   return (
-    <div style={ccV2.stripCell}>
-      <span style={ccV2.stripKicker}>{t('chart.annualBenefitLimit')}</span>
-      <span style={ccV2.stripBlue}>{fmtHKShort(schedule.annual_limit)}</span>
-      <span style={ccV2.stripSmall}>{secondary}</span>
-    </div>
+    <>
+      {cells.map((cell) => (
+        <div key={cell.label} style={ccV2.stripCell}>
+          <span style={ccV2.stripKicker}>{cell.label}</span>
+          <span style={cell.big ? ccV2.stripBig : ccV2.stripBlue}>{cell.value}</span>
+          {cell.remark && <span style={ccV2.stripSmall}>{cell.remark}</span>}
+        </div>
+      ))}
+    </>
   );
 }
 
@@ -455,11 +479,7 @@ export function ChartPanel({
                 {showPrem && premOf(focus.id) != null ? ` · HK$${premOf(focus.id)!.toLocaleString('en-US')}${t('common.perMonth')}` : ''}
               </span>
             </div>
-            <PlanLimitsCell planId={focus.id} deductible={focus.deductible} />
-            <div style={ccV2.stripCell}>
-              <span style={ccV2.stripKicker}>{t('chart.wardClass')}</span>
-              <span style={ccV2.stripBig}>{wardLabel(focusDef.ward, t)}</span>
-            </div>
+            <PlanTermCells plan={focusDef} deductible={focus.deductible} />
           </div>
 
           {chosenCases.length === 0 && <PromptBox title={t('chart.pickCasesTitle')} sub={t('chart.pickCasesSub')} />}

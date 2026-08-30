@@ -115,8 +115,11 @@ export const ccV2 = {
   }),
 
   // summary strip
-  strip: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 18, padding: '14px 0', borderBottom: '1px solid var(--bt-stone)' } as CSSProperties,
-  stripCell: { display: 'flex', flexDirection: 'column', gap: 4 } as CSSProperties,
+  // Plan · annual limit · SMM limit · lifetime limit · ward. minmax(0, 1fr) and
+  // the cell's own minWidth keep a long value inside its column instead of
+  // stretching the track.
+  strip: { display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 12, marginBottom: 18, padding: '14px 0', borderBottom: '1px solid var(--bt-stone)' } as CSSProperties,
+  stripCell: { display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 } as CSSProperties,
   stripKicker: { font: '500 11px/1 var(--bt-font)', color: 'var(--bt-graphite)', letterSpacing: '0.04em', textTransform: 'uppercase' } as CSSProperties,
   stripBig: { font: '700 16px/1.2 var(--bt-font)', color: 'var(--bt-ink)' } as CSSProperties,
   stripBlue: { font: '700 22px/1 var(--bt-font)', color: 'var(--bt-bowtie-blue)' } as CSSProperties,
