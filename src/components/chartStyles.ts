@@ -103,6 +103,16 @@ export const ccV2 = {
   bFav: (c: string): CSSProperties => ({ width: 16, height: 16, borderRadius: 5, background: c, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }),
   bTabLabel: { flex: 1, textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as CSSProperties,
   bTabX: (on: boolean): CSSProperties => ({ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: on ? 'var(--bt-graphite)' : 'var(--bt-rock)' }),
+  // Tab tooltip. position:fixed (not absolute) so it escapes the tab strip's
+  // overflow-x clipping; pointerEvents none so it can never steal the hover
+  // that's keeping it open.
+  bTip: (x: number, y: number): CSSProperties => ({
+    position: 'fixed', left: x, top: y, transform: 'translateX(-50%)', zIndex: 900,
+    maxWidth: 320, pointerEvents: 'none',
+    background: 'var(--bt-ink)', color: 'var(--bt-white)',
+    font: '500 12px/1.45 var(--bt-font)', padding: '6px 10px',
+    borderRadius: 'var(--bt-radius-s)', boxShadow: '0 4px 14px var(--bt-ink-20)',
+  }),
 
   // summary strip
   strip: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 18, padding: '14px 0', borderBottom: '1px solid var(--bt-stone)' } as CSSProperties,
