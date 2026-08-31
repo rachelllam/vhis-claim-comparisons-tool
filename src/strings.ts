@@ -35,6 +35,7 @@ const en = {
   "topbar.toolBadge": "Claim Comparison",
   "topbar.quotes": "Quotes",
   "topbar.quotesTitle": "Show indicative monthly premiums",
+  "topbar.sort": "Sort plans & cases in order",
   "topbar.clearAll": "Clear all",
 
   // ── left rail tabs ──
@@ -247,6 +248,7 @@ const zh: Record<StringKey, string> = {
   "topbar.toolBadge": "賠償試算",
   "topbar.quotes": "報價",
   "topbar.quotesTitle": "顯示參考每月保費",
+  "topbar.sort": "按順序排列計劃及個案",
   "topbar.clearAll": "全部清除",
 
   // ── left rail tabs ──

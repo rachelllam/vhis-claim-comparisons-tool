@@ -1,6 +1,6 @@
 // Right panel — WhatsApp message composer, adapts to "By case" / "By plan".
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { SURGERY_TIERS, VHIS_PLANS, fmtHK, fmtHKShort, fmtHKWan, tierIndex } from '../data';
+import { SURGERY_TIERS, VHIS_PLANS, casesFromIds, fmtHK, fmtHKShort, fmtHKWan } from '../data';
 import type { SurgeryCase, VhisPlan } from '../data';
 import { computeSurgeryPayout, isFlexiPremium, smmTerms } from '../benefitSchedule';
 import type { BenefitSchedule } from '../benefitSchedule';
@@ -238,14 +238,10 @@ export function MessagePanel({
     if (mode === 'plan') {
       const focus = activePlans.find((p) => p.id === cv.focusPlanId && p.deductible === cv.focusPlanDeductible) || activePlans[0];
       const focusDef = focus ? VHIS_PLANS.find((v) => v.id === focus.id) || null : null;
-      const cases = allCases.filter((c) => cv.selectedCaseIds.includes(c.id))
-        .slice()
-        .sort((a, b) => tierIndex(a.tier) - tierIndex(b.tier) || a.cost - b.cost);
+      const cases = casesFromIds(allCases, cv.selectedCaseIds);
       return buildByPlan({ focus, focusDef, cases, scheduleMap, lang, t });
     }
-    const chosen = allCases.filter((c) => cv.selectedCaseIds.includes(c.id))
-      .slice()
-      .sort((a, b) => tierIndex(a.tier) - tierIndex(b.tier) || a.cost - b.cost);
+    const chosen = casesFromIds(allCases, cv.selectedCaseIds);
     const focusCase = chosen.find((c) => c.id === cv.focusCaseId) || chosen[0] || null;
     return buildByCase({ caseItem: focusCase, plans, scheduleMap, lang, t });
   }, [allCases, mode, plans, scheduleMap, cv && cv.focusPlanId, cv && cv.focusPlanDeductible, cv && cv.focusCaseId, cv && cv.selectedCaseIds, lang, t]);

@@ -5,7 +5,7 @@
 // SEPARATE from the Case gender/age filters.
 import { useState, useEffect } from 'react';
 import type { CSSProperties } from 'react';
-import { repCaseIdsByTier } from './data';
+import { repCaseIdsByTier, sortCaseIds, sortPlans } from './data';
 import type { TierId } from './data';
 import { useOperationData, useOperationDataLoader, OperationDataProvider } from './useOperationData';
 import { LanguageProvider, useLang } from './i18n';
@@ -134,7 +134,19 @@ function EstimateNote() {
 }
 
 /* ── Top bar ───────────────────────────────────────────────────── */
-function CCTopBar({ onClearAll, showQuotes, setShowQuotes }: { onClearAll: () => void; showQuotes: boolean; setShowQuotes: (v: boolean) => void }) {
+function CCTopBar({
+  onClearAll,
+  onSortInOrder,
+  canSort,
+  showQuotes,
+  setShowQuotes,
+}: {
+  onClearAll: () => void;
+  onSortInOrder: () => void;
+  canSort: boolean;
+  showQuotes: boolean;
+  setShowQuotes: (v: boolean) => void;
+}) {
   const { t } = useLang();
   return (
     <div className="cc-topbar">
@@ -144,6 +156,24 @@ function CCTopBar({ onClearAll, showQuotes, setShowQuotes }: { onClearAll: () =>
       </div>
       <div className="cc-topbar-right">
         <LangSwitch />
+        {/* Icon button ported from the quotation tool's cp-header spec. Disabled
+            rather than hidden below two items — a topbar item vanishing shifts
+            everything beside it. The tooltip is CSS-driven (see .cc-topbar-sort-tip):
+            the native `title` is too slow to appear and invisible to touch. */}
+        <button
+          type="button"
+          className="cc-topbar-sort"
+          onClick={onSortInOrder}
+          disabled={!canSort}
+          aria-label={t('topbar.sort')}
+        >
+          <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2.6 4h10.8M2.6 8h7M2.6 12h3.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+            <path d="M11.2 8.6l2 2 2-2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M13.2 10.4V4.4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+          </svg>
+          <span className="cc-topbar-sort-tip" aria-hidden="true">{t('topbar.sort')}</span>
+        </button>
         {SHOW_QUOTES_UI && (
           <>
             <span style={{ width: 1, height: 18, background: 'var(--bt-stone)' }}></span>
@@ -226,6 +256,16 @@ function CoverageApp() {
       return [...prev, { id, deductible }];
     });
   };
+  // A one-off reorder, not a toggle: both tab strips jump to the order their
+  // left-rail picker lists its options in, and anything picked afterwards
+  // appends at the end until this is clicked again. Focus survives untouched —
+  // the effects above only re-point it when the focused item is *gone*, and
+  // sorting only permutes.
+  const onSortInOrder = () => {
+    setPlans((prev) => sortPlans(prev));
+    setSelectedCaseIds((prev) => sortCaseIds(cases, prev));
+  };
+  const canSort = plans.length > 1 || selectedCaseIds.length > 1;
   const onClearAll = () => {
     setTier('minor');
     setGender('all');
@@ -261,7 +301,13 @@ function CoverageApp() {
 
   return (
     <>
-      <CCTopBar onClearAll={onClearAll} showQuotes={showQuotes} setShowQuotes={setShowQuotes} />
+      <CCTopBar
+        onClearAll={onClearAll}
+        onSortInOrder={onSortInOrder}
+        canSort={canSort}
+        showQuotes={showQuotes}
+        setShowQuotes={setShowQuotes}
+      />
       <div className="cc-main">
         <EstimateNote />
         <div className="cc-area-left">
