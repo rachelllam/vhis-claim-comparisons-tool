@@ -20,11 +20,73 @@ import { ccChartStyles, ccV2, ccDetail } from './chartStyles';
 import { ccQuote } from './common';
 import { LockIcon, InternalDetailModal } from './InternalDetailModal';
 
-const capLabelShort = (plan: VhisPlan, t: (k: StringKey) => string) =>
-  plan.perSurgery >= 999999 ? t('common.noCap') : fmtHKShort(plan.perSurgery);
 // "3 nights" / "3 晚" / "Day case" for a hospital-stay night count.
 const nightsLabel = (days: number, t: (k: StringKey) => string) =>
   days === 0 ? t('common.dayCase') : `${days} ${t(days === 1 ? 'chart.night' : 'chart.nights')}`;
+
+// Plan-terms strip cells: the three ceilings plus the ward class, read from the
+// focused plan's live benefit schedule rather than the static VHIS_PLANS table.
+// All three limits show for every plan so the same numbers can be compared
+// across plans — a plan that lacks one says so instead of leaving a gap:
+//  - VHIS Standard — annual limit only; no SMM rider, no lifetime cap.
+//  - Flexi Regular / Flexi Plus — annual limit + the SMM rider's annual ceiling.
+//  - Flexi Premium ("Pink") — annual limit + lifetime limit.
+// "No cap" and "N/A" are deliberately different words: an absent lifetime cap
+// means lifetime coverage is unlimited, which is the opposite of an absent rider.
+//
+// Ward class reads the same way. Only Flexi Premium buys a ward — the tiered
+// plans pay by surgery type wherever you stay, so they show "No restriction",
+// with the ward named in the remark for the ones whose SMM top-up is the part
+// the ward class actually limits.
+//
+// Its own component so the hook lives in a real component body — the by-plan
+// branch it renders in sits after the by-case early return, where a hook can't go.
+function PlanTermCells({ plan, deductible }: { plan: VhisPlan; deductible: number }) {
+  const { t } = useLang();
+  const { schedule, error, loading } = useBenefitSchedule(plan.id, deductible);
+  // By id, not isFlexiPremium(schedule), so the ward cell is right from the
+  // first paint instead of flipping once the schedule lands.
+  const isPink = plan.id.startsWith('pink');
+  const dash = '—';
+
+  const cells: { label: string; value: string; remark?: string; big?: boolean }[] = [
+    {
+      label: t('chart.annualBenefitLimit'),
+      value: schedule ? fmtHKShort(schedule.annual_limit) : dash,
+      // One status line for the whole group, not the same message three times over.
+      remark: schedule ? '' : error ? t('chart.scheduleErrorTitle') : loading ? t('chart.scheduleLoading') : '',
+    },
+    {
+      label: t('chart.smmLimit'),
+      value: !schedule ? dash : schedule.smm_annual_limit > 0 ? fmtHKShort(schedule.smm_annual_limit) : t('common.notApplicable'),
+    },
+    {
+      label: t('chart.lifetimeLimit'),
+      value: !schedule ? dash : schedule.lifetime_limit != null ? fmtHKShort(schedule.lifetime_limit) : t('common.noCap'),
+    },
+    {
+      label: t('chart.wardClass'),
+      value: isPink ? wardLabel(plan.ward, t) : t('common.noRestriction'),
+      remark:
+        !isPink && schedule && schedule.smm_annual_limit > 0
+          ? t('chart.smmWardOnlyTpl').replace('{ward}', wardLabel(plan.ward, t))
+          : '',
+      big: true,
+    },
+  ];
+
+  return (
+    <>
+      {cells.map((cell) => (
+        <div key={cell.label} style={ccV2.stripCell}>
+          <span style={ccV2.stripKicker}>{cell.label}</span>
+          <span style={cell.big ? ccV2.stripBig : ccV2.stripBlue}>{cell.value}</span>
+          {cell.remark && <span style={ccV2.stripSmall}>{cell.remark}</span>}
+        </div>
+      ))}
+    </>
+  );
+}
 
 // ── Generalised result card: header (JSX) + coverage bar + receipt ──
 function ResultCardV2({
@@ -65,7 +127,9 @@ function ResultCardV2({
   const covered = payout.covered;
   const youPay = payout.customerPays;
   const zero = covered === 0;
-  const capLabel = t('chart.planLimitPerSurgeryTpl').replace('{amount}', fmtHKShort(payout.covered));
+  // Share of the eligible charge the plan pays. One decimal, matching the same
+  // figure in the message panel's summary line so the two can't disagree.
+  const coveredPct = charge > 0 ? ((covered / charge) * 100).toFixed(1) : '0.0';
 
   const feeItems: { label: string; amount: number; hint?: string }[] = payout.fees.itemized
     ? [
@@ -137,14 +201,6 @@ function ResultCardV2({
               <span style={{ ...ccChartStyles.receiptVal, ...ccChartStyles.receiptValNeg }}>−{fmtHK(ded)}</span>
             </div>
           )}
-          {overCap > 0 && (
-            <div style={{ ...ccChartStyles.receiptRow, ...ccChartStyles.receiptRowBorder }}>
-              <span style={ccChartStyles.receiptLabel}>
-                {t('chart.aboveLimit')}<span style={ccChartStyles.receiptHint}>{capLabel}</span>
-              </span>
-              <span style={{ ...ccChartStyles.receiptVal, ...ccChartStyles.receiptValNeg }}>−{fmtHK(overCap)}</span>
-            </div>
-          )}
           <div style={{ ...ccChartStyles.receiptRow, ...ccChartStyles.receiptRowBorder }}>
             <span style={{ ...ccChartStyles.receiptLabel, color: 'var(--bt-green-day)', fontWeight: 700, whiteSpace: 'nowrap' }}>{t('chart.vhisCovers')}</span>
             <span style={{ ...ccChartStyles.receiptVal, ...ccChartStyles.receiptValPos }}>{fmtHK(covered)}</span>
@@ -162,7 +218,10 @@ function ResultCardV2({
           </div>
           <div style={ccChartStyles.paysBox(zero)}>
             <span style={ccChartStyles.paysLabel}>{t('chart.netPayout')}</span>
-            <span style={ccChartStyles.paysValue(zero)}>{fmtHK(covered)}</span>
+            <span style={ccChartStyles.paysValueBox}>
+              <span style={ccChartStyles.paysValue(zero)}>{fmtHK(covered)}</span>
+              <span style={ccChartStyles.paysPct(zero)}>{coveredPct}%</span>
+            </span>
           </div>
           <div style={ccChartStyles.youPayRow}>
             <span style={ccChartStyles.youPayLabel}>{t('chart.youPayTotal')}</span>
@@ -417,16 +476,7 @@ export function ChartPanel({
                 {showPrem && premOf(focus.id) != null ? ` · HK$${premOf(focus.id)!.toLocaleString('en-US')}${t('common.perMonth')}` : ''}
               </span>
             </div>
-            <div style={ccV2.stripCell}>
-              <span style={ccV2.stripKicker}>{t('chart.perSurgeryLimit')}</span>
-              <span style={ccV2.stripBlue}>{capLabelShort(focusDef, t)}</span>
-              <span style={ccV2.stripSmall}>{t('chart.capsEachClaim')}</span>
-            </div>
-            <div style={ccV2.stripCell}>
-              <span style={ccV2.stripKicker}>{t('chart.wardClass')}</span>
-              <span style={ccV2.stripBig}>{wardLabel(focusDef.ward, t)}</span>
-              <span style={ccV2.stripSmall}>{t('chart.annualTpl').replace('{amount}', fmtHKShort(focusDef.annual))}</span>
-            </div>
+            <PlanTermCells plan={focusDef} deductible={focus.deductible} />
           </div>
 
           {chosenCases.length === 0 && <PromptBox title={t('chart.pickCasesTitle')} sub={t('chart.pickCasesSub')} />}

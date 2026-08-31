@@ -41,6 +41,13 @@ export const ccChartStyles = {
   paysLabel: { font: '700 12px/1.2 var(--bt-font)', color: 'var(--bt-ink)', letterSpacing: '0.02em' } as CSSProperties,
   paysSub: { display: 'block', font: '400 11px/1.2 var(--bt-font)', color: 'var(--bt-graphite)', marginTop: 2 } as CSSProperties,
   paysValue: (zero: boolean): CSSProperties => ({ font: '700 24px/1 var(--bt-font)', color: zero ? 'var(--bt-hotel-california)' : 'var(--bt-green-day)', whiteSpace: 'nowrap' }),
+  // Share of the charge, on its own line under the payout amount and aligned to
+  // it — smaller so the dollar figure still reads first.
+  paysValueBox: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 } as CSSProperties,
+  paysPct: (zero: boolean): CSSProperties => ({
+    font: '700 13px/1 var(--bt-font)',
+    color: zero ? 'var(--bt-hotel-california)' : 'var(--bt-green-day)', opacity: 0.75,
+  }),
 
   // The estimate disclaimer moved out to the page-level `.cc-note` banner in
   // .cc-main, so it no longer scrolls away with the result cards.
@@ -92,9 +99,10 @@ export const ccV2 = {
   tabStrip2: { display: 'flex', alignItems: 'flex-end', gap: 0, background: 'var(--bt-blush)', padding: '10px 6px 0', borderTop: '1px solid rgba(255,0,104,0.10)' } as CSSProperties,
   groupLabel: (bg: string): CSSProperties => ({ display: 'inline-flex', alignItems: 'center', gap: 5, alignSelf: 'center', margin: '0 8px 5px 2px', padding: '5px 11px', borderRadius: 'var(--bt-radius-pill)', background: bg, color: 'var(--bt-white)', font: '700 11px/1 var(--bt-font)', letterSpacing: '0.02em', whiteSpace: 'nowrap', flexShrink: 0 }),
   emptyHint: { alignSelf: 'center', marginBottom: 6, padding: '0 4px', font: '500 12px/1 var(--bt-font)', color: 'var(--bt-rock)' } as CSSProperties,
-  bTab: (on: boolean): CSSProperties => ({
+  bTab: (on: boolean, hover = false): CSSProperties => ({
     position: 'relative', flex: '1 1 0', minWidth: 140, display: 'flex', alignItems: 'center', gap: 7,
-    cursor: 'pointer', border: 0, background: on ? 'var(--bt-white)' : 'transparent',
+    cursor: 'pointer', border: 0,
+    background: on ? 'var(--bt-white)' : hover ? 'rgba(255,255,255,0.55)' : 'transparent',
     color: 'var(--bt-bowtie-blue)', font: `${on ? 700 : 500} 13px/1 var(--bt-font)`,
     borderRadius: '9px 9px 0 0', padding: '10px 10px 12px', marginBottom: -1,
     boxShadow: on ? '0 -2px 6px rgba(25,19,87,0.07)' : 'none',
@@ -102,11 +110,24 @@ export const ccV2 = {
   }),
   bFav: (c: string): CSSProperties => ({ width: 16, height: 16, borderRadius: 5, background: c, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }),
   bTabLabel: { flex: 1, textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as CSSProperties,
-  bTabX: (on: boolean): CSSProperties => ({ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: on ? 'var(--bt-graphite)' : 'var(--bt-rock)' }),
+  bTabX: (on: boolean): CSSProperties => ({ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: on ? 'var(--bt-graphite)' : 'var(--bt-rock)', border: 0, padding: 0, background: 'transparent', cursor: 'pointer' }),
+  // Tab tooltip. position:fixed (not absolute) so it escapes the tab strip's
+  // overflow-x clipping; pointerEvents none so it can never steal the hover
+  // that's keeping it open.
+  bTip: (x: number, y: number): CSSProperties => ({
+    position: 'fixed', left: x, top: y, transform: 'translateX(-50%)', zIndex: 900,
+    maxWidth: 320, pointerEvents: 'none',
+    background: 'var(--bt-ink)', color: 'var(--bt-white)',
+    font: '500 12px/1.45 var(--bt-font)', padding: '6px 10px',
+    borderRadius: 'var(--bt-radius-s)', boxShadow: '0 4px 14px var(--bt-ink-20)',
+  }),
 
   // summary strip
-  strip: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 18, padding: '14px 0', borderBottom: '1px solid var(--bt-stone)' } as CSSProperties,
-  stripCell: { display: 'flex', flexDirection: 'column', gap: 4 } as CSSProperties,
+  // Plan · annual limit · SMM limit · lifetime limit · ward. minmax(0, 1fr) and
+  // the cell's own minWidth keep a long value inside its column instead of
+  // stretching the track.
+  strip: { display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 12, marginBottom: 18, padding: '14px 0', borderBottom: '1px solid var(--bt-stone)' } as CSSProperties,
+  stripCell: { display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 } as CSSProperties,
   stripKicker: { font: '500 11px/1 var(--bt-font)', color: 'var(--bt-graphite)', letterSpacing: '0.04em', textTransform: 'uppercase' } as CSSProperties,
   stripBig: { font: '700 16px/1.2 var(--bt-font)', color: 'var(--bt-ink)' } as CSSProperties,
   stripBlue: { font: '700 22px/1 var(--bt-font)', color: 'var(--bt-bowtie-blue)' } as CSSProperties,
