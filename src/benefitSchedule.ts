@@ -313,10 +313,13 @@ function computeTieredPayout(
   const smmFactorItem = items.find((i) => i.smm_adjustment_factor != null);
   const smmFactor = smmFactorItem ? num(smmFactorItem.smm_adjustment_factor!) : 0;
   const smmUncapped = remainingAfterFees * smmFactor;
-  const annualHeadroom = Math.max(0, schedule.annual_limit - feesTotal);
+  // The SMM rider's ceiling sits OUTSIDE the plan's annual benefit limit, so
+  // what the fees consumed of that limit doesn't bound the top-up. A lifetime
+  // limit would still bound it — inert today (every tiered plan's is null), but
+  // correct if one ever carries one.
   const lifetimeHeadroom =
     schedule.lifetime_limit == null ? Infinity : Math.max(0, schedule.lifetime_limit - feesTotal);
-  const smm = Math.min(smmUncapped, schedule.smm_annual_limit, annualHeadroom, lifetimeHeadroom);
+  const smm = Math.min(smmUncapped, schedule.smm_annual_limit, lifetimeHeadroom);
 
   const covered = feesTotal + smm;
   const oop = totalCost - covered;

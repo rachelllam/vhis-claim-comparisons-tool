@@ -127,7 +127,6 @@ function ResultCardV2({
   const covered = payout.covered;
   const youPay = payout.customerPays;
   const zero = covered === 0;
-  const capLabel = t('chart.planLimitPerSurgeryTpl').replace('{amount}', fmtHKShort(payout.covered));
 
   const feeItems: { label: string; amount: number; hint?: string }[] = payout.fees.itemized
     ? [
@@ -197,14 +196,6 @@ function ResultCardV2({
             <div style={{ ...ccChartStyles.receiptRow, ...ccChartStyles.receiptRowBorder }}>
               <span style={ccChartStyles.receiptLabel}>{t('chart.deductible')}</span>
               <span style={{ ...ccChartStyles.receiptVal, ...ccChartStyles.receiptValNeg }}>−{fmtHK(ded)}</span>
-            </div>
-          )}
-          {overCap > 0 && (
-            <div style={{ ...ccChartStyles.receiptRow, ...ccChartStyles.receiptRowBorder }}>
-              <span style={ccChartStyles.receiptLabel}>
-                {t('chart.aboveLimit')}<span style={ccChartStyles.receiptHint}>{capLabel}</span>
-              </span>
-              <span style={{ ...ccChartStyles.receiptVal, ...ccChartStyles.receiptValNeg }}>−{fmtHK(overCap)}</span>
             </div>
           )}
           <div style={{ ...ccChartStyles.receiptRow, ...ccChartStyles.receiptRowBorder }}>
