@@ -1158,8 +1158,9 @@ input[type="number"]::-webkit-outer-spin-button {
   gap: 8px;
   min-width: 0;
 }
-/* Matches .cc-panel-h1 so this title reads as a peer of the chart column's
-   heading beside it — minus the margin, since it sits in a flex row. */
+/* Matches the chart column's case/plan title (ccDetail.thShort) so the two
+   columns' headings read as peers — minus the margin, since it sits in a
+   flex row. */
 .cc-msg-title {
   font: 700 26px/1.3 var(--bt-font);
   color: var(--bt-bowtie-blue);

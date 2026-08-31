@@ -123,10 +123,11 @@ export const ccV2 = {
   }),
 
   // summary strip
-  // Plan · annual limit · SMM limit · lifetime limit · ward. minmax(0, 1fr) and
-  // the cell's own minWidth keep a long value inside its column instead of
-  // stretching the track.
-  strip: { display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: 12, marginBottom: 18, padding: '14px 0', borderBottom: '1px solid var(--bt-stone)' } as CSSProperties,
+  // Annual limit · SMM limit · lifetime limit · ward — the four PlanTermCells.
+  // The plan's own name is the view title (the h3 above), not a cell in here.
+  // minmax(0, 1fr) and the cell's own minWidth keep a long value inside its
+  // column instead of stretching the track.
+  strip: { display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 12, marginBottom: 18, padding: '14px 0', borderBottom: '1px solid var(--bt-stone)' } as CSSProperties,
   stripCell: { display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 } as CSSProperties,
   stripKicker: { font: '500 11px/1 var(--bt-font)', color: 'var(--bt-graphite)', letterSpacing: '0.04em', textTransform: 'uppercase' } as CSSProperties,
   stripBig: { font: '700 16px/1.2 var(--bt-font)', color: 'var(--bt-ink)' } as CSSProperties,
@@ -154,7 +155,10 @@ export const ccDetail = {
   thHead: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 14 } as CSSProperties,
   thNames: { minWidth: 0 } as CSSProperties,
   thBadgeRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 } as CSSProperties,
-  thShort: { font: '700 22px/1.15 var(--bt-font)', color: 'var(--bt-ink)', margin: 0 } as CSSProperties,
+  // The chart column's title, for both the focused case and the focused plan.
+  // Matches .cc-msg-title / .cc-panel-h1 so it reads as a peer of the message
+  // column's heading beside it — minus the margin, which its wrapper owns.
+  thShort: { font: '700 26px/1.3 var(--bt-font)', color: 'var(--bt-bowtie-blue)', margin: 0, paddingTop: 10 } as CSSProperties,
   thOfficial: { font: '400 13px/1.4 var(--bt-font)', color: 'var(--bt-graphite)', marginTop: 4 } as CSSProperties,
   rangeNote: { font: '400 12px/1.3 var(--bt-font)', color: 'var(--bt-graphite)' } as CSSProperties,
 
