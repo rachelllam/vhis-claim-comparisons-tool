@@ -127,6 +127,9 @@ function ResultCardV2({
   const covered = payout.covered;
   const youPay = payout.customerPays;
   const zero = covered === 0;
+  // Share of the eligible charge the plan pays. One decimal, matching the same
+  // figure in the message panel's summary line so the two can't disagree.
+  const coveredPct = charge > 0 ? ((covered / charge) * 100).toFixed(1) : '0.0';
 
   const feeItems: { label: string; amount: number; hint?: string }[] = payout.fees.itemized
     ? [
@@ -215,7 +218,10 @@ function ResultCardV2({
           </div>
           <div style={ccChartStyles.paysBox(zero)}>
             <span style={ccChartStyles.paysLabel}>{t('chart.netPayout')}</span>
-            <span style={ccChartStyles.paysValue(zero)}>{fmtHK(covered)}</span>
+            <span style={ccChartStyles.paysValueBox}>
+              <span style={ccChartStyles.paysValue(zero)}>{fmtHK(covered)}</span>
+              <span style={ccChartStyles.paysPct(zero)}>{coveredPct}%</span>
+            </span>
           </div>
           <div style={ccChartStyles.youPayRow}>
             <span style={ccChartStyles.youPayLabel}>{t('chart.youPayTotal')}</span>

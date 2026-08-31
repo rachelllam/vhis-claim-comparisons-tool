@@ -41,6 +41,13 @@ export const ccChartStyles = {
   paysLabel: { font: '700 12px/1.2 var(--bt-font)', color: 'var(--bt-ink)', letterSpacing: '0.02em' } as CSSProperties,
   paysSub: { display: 'block', font: '400 11px/1.2 var(--bt-font)', color: 'var(--bt-graphite)', marginTop: 2 } as CSSProperties,
   paysValue: (zero: boolean): CSSProperties => ({ font: '700 24px/1 var(--bt-font)', color: zero ? 'var(--bt-hotel-california)' : 'var(--bt-green-day)', whiteSpace: 'nowrap' }),
+  // Share of the charge, on its own line under the payout amount and aligned to
+  // it — smaller so the dollar figure still reads first.
+  paysValueBox: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 } as CSSProperties,
+  paysPct: (zero: boolean): CSSProperties => ({
+    font: '700 13px/1 var(--bt-font)',
+    color: zero ? 'var(--bt-hotel-california)' : 'var(--bt-green-day)', opacity: 0.75,
+  }),
 
   // The estimate disclaimer moved out to the page-level `.cc-note` banner in
   // .cc-main, so it no longer scrolls away with the result cards.
