@@ -209,10 +209,12 @@ function CoverageApp() {
   const [profile, setProfile] = useState<Profile>({ age: 42, gender: 'male', smoker: false });
   const [showQuotes, setShowQuotes] = useState(false);
 
+  // Default comparison: Flexi Regular against the two Pink (standard ward)
+  // deductible tiers staff quote most often.
   const [plans, setPlans] = useState<SelectedPlan[]>([
-    { id: 'flexi-sup', deductible: 0 },
-    { id: 'pink-semi', deductible: 20000 },
-    { id: 'pink-priv', deductible: 0 },
+    { id: 'flexi-basic', deductible: 0 },
+    { id: 'pink-std', deductible: 0 },
+    { id: 'pink-std', deductible: 20000 },
   ]);
 
   const [selectedCaseIds, setSelectedCaseIds] = useState<string[]>(() => repCaseIdsByTier(cases));
@@ -221,7 +223,7 @@ function CoverageApp() {
 
   const [msgCollapsed, setMsgCollapsed] = useState(false);
   const [coverageMode, setCoverageMode] = useState<CoverageMode>('case');
-  const [focusPlanId, setFocusPlanId] = useState<string | null>('flexi-sup');
+  const [focusPlanId, setFocusPlanId] = useState<string | null>('flexi-basic');
   const [focusPlanDeductible, setFocusPlanDeductible] = useState<number | null>(0);
   const [focusCaseId, setFocusCaseId] = useState<string | null>(selectedCaseIds[0] || null);
 
