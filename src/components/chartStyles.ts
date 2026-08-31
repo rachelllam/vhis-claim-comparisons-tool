@@ -153,12 +153,15 @@ export const ccV2 = {
 // ── detail-drawer + treatment-header styles (ported from ccDetail) ──
 export const ccDetail = {
   thHead: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 14 } as CSSProperties,
-  thNames: { minWidth: 0 } as CSSProperties,
+  // Wraps the title + its sub-line, in both the by-case and by-plan views. The
+  // padding lifts the title off the panel's top edge; it lives here rather than
+  // on thShort so that stays purely typographic.
+  thNames: { minWidth: 0, paddingTop: 10 } as CSSProperties,
   thBadgeRow: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 } as CSSProperties,
   // The chart column's title, for both the focused case and the focused plan.
-  // Matches .cc-msg-title / .cc-panel-h1 so it reads as a peer of the message
-  // column's heading beside it — minus the margin, which its wrapper owns.
-  thShort: { font: '700 26px/1.3 var(--bt-font)', color: 'var(--bt-bowtie-blue)', margin: 0, paddingTop: 10 } as CSSProperties,
+  // Type matches .cc-msg-title / .cc-panel-h1 so it reads as a peer of the
+  // message column's heading beside it. Spacing is the wrapper's (thNames).
+  thShort: { font: '700 26px/1.3 var(--bt-font)', color: 'var(--bt-bowtie-blue)', margin: 0 } as CSSProperties,
   thOfficial: { font: '400 13px/1.4 var(--bt-font)', color: 'var(--bt-graphite)', marginTop: 4 } as CSSProperties,
   rangeNote: { font: '400 12px/1.3 var(--bt-font)', color: 'var(--bt-graphite)' } as CSSProperties,
 
