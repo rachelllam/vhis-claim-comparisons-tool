@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { VHIS_PLANS, SURGERY_TIERS, casesFromIds, fmtHK } from '../data';
 import { useOperationData } from '../useOperationData';
-import { useLang, pick, pickCaseName, pickCaseShort } from '../i18n';
+import { useLang, pick, pickCaseShort } from '../i18n';
 import type { SelectedPlan, CoverageView } from '../types';
 import { ccV2 } from './chartStyles';
 
@@ -18,7 +18,6 @@ function TabBtn({
   favColor,
   icon,
   label,
-  tip,
   on,
   onClick,
   onClose,
@@ -28,7 +27,6 @@ function TabBtn({
   favColor: string;
   icon: ReactNode;
   label: string;
-  tip?: string;
   on: boolean;
   onClick: () => void;
   onClose: () => void;
@@ -36,7 +34,6 @@ function TabBtn({
   onHideTip: () => void;
 }) {
   const { t } = useLang();
-  const full = tip ?? label;
   // Hover background lives in state, not a style mutation on the DOM node —
   // this component re-renders whenever the tooltip opens or closes, and a
   // re-render re-applies the style prop.
@@ -56,8 +53,8 @@ function TabBtn({
       aria-selected={on}
       // title as well as the custom tooltip: the native one is the fallback for
       // anything that reaches the tab without a hover or a focus event.
-      title={full}
-      onFocus={(e) => onShowTip(full, e.currentTarget)}
+      title={label}
+      onFocus={(e) => onShowTip(label, e.currentTarget)}
       onBlur={onHideTip}
       // mouseover, not mouseenter: it fires again on every move between the
       // label and the ✕, so the tooltip is re-decided each time rather than
@@ -67,7 +64,7 @@ function TabBtn({
         // Over the ✕ the label tooltip would sit on top of the ✕'s own hint —
         // drop it and let the remove hint speak for itself.
         if ((e.target as HTMLElement).closest('button')) onHideTip();
-        else onShowTip(full, e.currentTarget);
+        else onShowTip(label, e.currentTarget);
       }}
       onMouseLeave={() => {
         setHover(false);
@@ -151,18 +148,16 @@ export function CoverageTabsBar({
         ) : (
           chosenCases.map((c) => {
             const tier = SURGERY_TIERS.find((x) => x.id === c.tier);
-            const label = tier ? `${pick(tier.short, lang)} · ${pickCaseShort(c, lang)}` : pickCaseShort(c, lang);
-            // The tab shows the short operation name — the tooltip is where the
-            // full one is readable, truncation aside.
-            const fullName = pickCaseName(c, lang);
-            const tipText = tier ? `${pick(tier.short, lang)} · ${fullName}` : fullName;
+            const shortName = pickCaseShort(c, lang);
+            // No tip prop: the tooltip is the label itself, which is the point —
+            // the tab ellipsises it and the tooltip is where it reads in full.
+            const label = tier ? `${pick(tier.short, lang)} · ${shortName}` : shortName;
             return (
               <TabBtn
                 key={c.id}
                 favColor={tier ? tier.accent : 'var(--bt-bowtie-blue)'}
                 icon={caseIcon}
                 label={label}
-                tip={tipText}
                 on={mode === 'case' && c.id === resolvedCaseId}
                 onClick={() => { setMode('case'); cv.setFocusCaseId(c.id); }}
                 onClose={() => onRemoveCase(c.id)}
