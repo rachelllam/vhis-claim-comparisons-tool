@@ -37,12 +37,16 @@ function TabBtn({
 }) {
   const { t } = useLang();
   const full = tip ?? label;
+  // Hover background lives in state, not a style mutation on the DOM node —
+  // this component re-renders whenever the tooltip opens or closes, and a
+  // re-render re-applies the style prop.
+  const [hover, setHover] = useState(false);
   // A div, not a button: it holds the ✕, which has to be a real button of its
   // own (interactive elements can't nest). role="tab" + tabIndex + the key
   // handler give back what the button element was providing.
   return (
     <div
-      style={ccV2.bTab(on)}
+      style={ccV2.bTab(on, hover)}
       onClick={onClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); }
@@ -55,12 +59,18 @@ function TabBtn({
       title={full}
       onFocus={(e) => onShowTip(full, e.currentTarget)}
       onBlur={onHideTip}
-      onMouseEnter={(e) => {
-        if (!on) e.currentTarget.style.background = 'rgba(255,255,255,0.55)';
-        onShowTip(full, e.currentTarget);
+      // mouseover, not mouseenter: it fires again on every move between the
+      // label and the ✕, so the tooltip is re-decided each time rather than
+      // staying hidden after the pointer has once touched the ✕.
+      onMouseOver={(e) => {
+        setHover(true);
+        // Over the ✕ the label tooltip would sit on top of the ✕'s own hint —
+        // drop it and let the remove hint speak for itself.
+        if ((e.target as HTMLElement).closest('button')) onHideTip();
+        else onShowTip(full, e.currentTarget);
       }}
-      onMouseLeave={(e) => {
-        if (!on) e.currentTarget.style.background = 'transparent';
+      onMouseLeave={() => {
+        setHover(false);
         onHideTip();
       }}
     >
@@ -71,10 +81,8 @@ function TabBtn({
         style={ccV2.bTabX(on)}
         title={t('common.removeFromComparison')}
         aria-label={`${t('common.removeFromComparison')}: ${label}`}
-        // Over the ✕ the label tooltip would sit on top of the ✕'s own hint —
-        // drop it and let the remove hint speak for itself. stopPropagation on
-        // focus because focusin bubbles, so the tab would otherwise re-show it.
-        onMouseEnter={onHideTip}
+        // stopPropagation because focusin bubbles — without it the tab's own
+        // onFocus would put the label tooltip back over the ✕'s hint.
         onFocus={(e) => { e.stopPropagation(); onHideTip(); }}
         onClick={(e) => { e.stopPropagation(); onClose(); }}
       >

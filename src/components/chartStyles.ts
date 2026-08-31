@@ -99,9 +99,10 @@ export const ccV2 = {
   tabStrip2: { display: 'flex', alignItems: 'flex-end', gap: 0, background: 'var(--bt-blush)', padding: '10px 6px 0', borderTop: '1px solid rgba(255,0,104,0.10)' } as CSSProperties,
   groupLabel: (bg: string): CSSProperties => ({ display: 'inline-flex', alignItems: 'center', gap: 5, alignSelf: 'center', margin: '0 8px 5px 2px', padding: '5px 11px', borderRadius: 'var(--bt-radius-pill)', background: bg, color: 'var(--bt-white)', font: '700 11px/1 var(--bt-font)', letterSpacing: '0.02em', whiteSpace: 'nowrap', flexShrink: 0 }),
   emptyHint: { alignSelf: 'center', marginBottom: 6, padding: '0 4px', font: '500 12px/1 var(--bt-font)', color: 'var(--bt-rock)' } as CSSProperties,
-  bTab: (on: boolean): CSSProperties => ({
+  bTab: (on: boolean, hover = false): CSSProperties => ({
     position: 'relative', flex: '1 1 0', minWidth: 140, display: 'flex', alignItems: 'center', gap: 7,
-    cursor: 'pointer', border: 0, background: on ? 'var(--bt-white)' : 'transparent',
+    cursor: 'pointer', border: 0,
+    background: on ? 'var(--bt-white)' : hover ? 'rgba(255,255,255,0.55)' : 'transparent',
     color: 'var(--bt-bowtie-blue)', font: `${on ? 700 : 500} 13px/1 var(--bt-font)`,
     borderRadius: '9px 9px 0 0', padding: '10px 10px 12px', marginBottom: -1,
     boxShadow: on ? '0 -2px 6px rgba(25,19,87,0.07)' : 'none',
