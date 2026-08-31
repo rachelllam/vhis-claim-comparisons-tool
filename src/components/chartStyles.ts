@@ -109,7 +109,7 @@ export const ccV2 = {
   }),
   bFav: (c: string): CSSProperties => ({ width: 16, height: 16, borderRadius: 5, background: c, flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }),
   bTabLabel: { flex: 1, textAlign: 'left', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } as CSSProperties,
-  bTabX: (on: boolean): CSSProperties => ({ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: on ? 'var(--bt-graphite)' : 'var(--bt-rock)' }),
+  bTabX: (on: boolean): CSSProperties => ({ width: 18, height: 18, borderRadius: '50%', flexShrink: 0, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: on ? 'var(--bt-graphite)' : 'var(--bt-rock)', border: 0, padding: 0, background: 'transparent', cursor: 'pointer' }),
   // Tab tooltip. position:fixed (not absolute) so it escapes the tab strip's
   // overflow-x clipping; pointerEvents none so it can never steal the hover
   // that's keeping it open.

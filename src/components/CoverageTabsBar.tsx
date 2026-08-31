@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { VHIS_PLANS, SURGERY_TIERS, casesFromIds, fmtHK } from '../data';
 import { useOperationData } from '../useOperationData';
 import { useLang, pick, pickCaseName, pickCaseShort } from '../i18n';
@@ -26,7 +26,7 @@ function TabBtn({
   onHideTip,
 }: {
   favColor: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   tip?: string;
   on: boolean;
@@ -36,15 +36,28 @@ function TabBtn({
   onHideTip: () => void;
 }) {
   const { t } = useLang();
+  const full = tip ?? label;
+  // A div, not a button: it holds the ✕, which has to be a real button of its
+  // own (interactive elements can't nest). role="tab" + tabIndex + the key
+  // handler give back what the button element was providing.
   return (
-    <button
+    <div
       style={ccV2.bTab(on)}
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); }
+      }}
       role="tab"
+      tabIndex={0}
       aria-selected={on}
+      // title as well as the custom tooltip: the native one is the fallback for
+      // anything that reaches the tab without a hover or a focus event.
+      title={full}
+      onFocus={(e) => onShowTip(full, e.currentTarget)}
+      onBlur={onHideTip}
       onMouseEnter={(e) => {
         if (!on) e.currentTarget.style.background = 'rgba(255,255,255,0.55)';
-        onShowTip(tip ?? label, e.currentTarget);
+        onShowTip(full, e.currentTarget);
       }}
       onMouseLeave={(e) => {
         if (!on) e.currentTarget.style.background = 'transparent';
@@ -53,20 +66,23 @@ function TabBtn({
     >
       <span style={ccV2.bFav(favColor)}>{icon}</span>
       <span style={ccV2.bTabLabel}>{label}</span>
-      <span
+      <button
+        type="button"
         style={ccV2.bTabX(on)}
-        role="button"
         title={t('common.removeFromComparison')}
+        aria-label={`${t('common.removeFromComparison')}: ${label}`}
         // Over the ✕ the label tooltip would sit on top of the ✕'s own hint —
-        // drop it and let the remove hint speak for itself.
+        // drop it and let the remove hint speak for itself. stopPropagation on
+        // focus because focusin bubbles, so the tab would otherwise re-show it.
         onMouseEnter={onHideTip}
+        onFocus={(e) => { e.stopPropagation(); onHideTip(); }}
         onClick={(e) => { e.stopPropagation(); onClose(); }}
       >
         <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
           <path d="M3 3l6 6M9 3l-6 6"></path>
         </svg>
-      </span>
-    </button>
+      </button>
+    </div>
   );
 }
 
@@ -109,7 +125,13 @@ export function CoverageTabsBar({
   const [tip, setTip] = useState<TipState | null>(null);
   const showTip = (text: string, el: HTMLElement) => {
     const r = el.getBoundingClientRect();
-    setTip({ text, x: Math.min(Math.max(r.left + r.width / 2, 170), window.innerWidth - 170), y: r.bottom + 6 });
+    // Half of bTip's 320px max width, plus a margin. On a viewport too narrow to
+    // hold that (min > max), centring is the only placement that stays on screen.
+    const edge = 170;
+    const min = edge;
+    const max = window.innerWidth - edge;
+    const mid = r.left + r.width / 2;
+    setTip({ text, x: max <= min ? window.innerWidth / 2 : Math.min(Math.max(mid, min), max), y: r.bottom + 6 });
   };
   const hideTip = () => setTip(null);
   return (

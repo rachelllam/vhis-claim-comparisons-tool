@@ -93,7 +93,7 @@ const en = {
   "chart.planLabel": "Plan",
   "chart.annualBenefitLimit": "Annual benefit limit",
   // Shown for every plan, whether or not it carries them: a plan with no SMM
-  // rider reads "None", and one with no lifetime cap reads "No cap".
+  // rider reads "N/A", and one with no lifetime cap reads "No cap".
   "chart.smmLimit": "SMM limit",
   "chart.lifetimeLimit": "Lifetime limit",
   // Ward class only bites on the SMM top-up for the tiered plans — the plan
