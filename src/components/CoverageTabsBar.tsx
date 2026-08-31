@@ -46,6 +46,9 @@ function TabBtn({
       style={ccV2.bTab(on, hover)}
       onClick={onClick}
       onKeyDown={(e) => {
+        // keydown bubbles, so Enter/Space on the ✕ would land here too and
+        // select the tab on its way to removing it.
+        if ((e.target as HTMLElement).closest('button')) return;
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); }
       }}
       role="tab"
