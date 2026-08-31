@@ -1,8 +1,98 @@
+import { useState, type ReactNode } from 'react';
 import { VHIS_PLANS, SURGERY_TIERS, casesFromIds, fmtHK } from '../data';
 import { useOperationData } from '../useOperationData';
 import { useLang, pick, pickCaseShort } from '../i18n';
 import type { SelectedPlan, CoverageView } from '../types';
 import { ccV2 } from './chartStyles';
+
+interface TipState {
+  text: string;
+  x: number;
+  y: number;
+}
+
+// One tab. Module-level (not nested in CoverageTabsBar) so its component identity
+// survives the parent re-rendering on every tooltip show/hide — a nested
+// definition would remount every tab mid-hover and make the tooltip flicker.
+function TabBtn({
+  favColor,
+  icon,
+  label,
+  on,
+  onClick,
+  onClose,
+  onShowTip,
+  onHideTip,
+}: {
+  favColor: string;
+  icon: ReactNode;
+  label: string;
+  on: boolean;
+  onClick: () => void;
+  onClose: () => void;
+  onShowTip: (text: string, el: HTMLElement) => void;
+  onHideTip: () => void;
+}) {
+  const { t } = useLang();
+  // Hover background lives in state, not a style mutation on the DOM node —
+  // this component re-renders whenever the tooltip opens or closes, and a
+  // re-render re-applies the style prop.
+  const [hover, setHover] = useState(false);
+  // A div, not a button: it holds the ✕, which has to be a real button of its
+  // own (interactive elements can't nest). role="tab" + tabIndex + the key
+  // handler give back what the button element was providing.
+  return (
+    <div
+      style={ccV2.bTab(on, hover)}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        // keydown bubbles, so Enter/Space on the ✕ would land here too and
+        // select the tab on its way to removing it.
+        if ((e.target as HTMLElement).closest('button')) return;
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); }
+      }}
+      role="tab"
+      tabIndex={0}
+      aria-selected={on}
+      // title as well as the custom tooltip: the native one is the fallback for
+      // anything that reaches the tab without a hover or a focus event.
+      title={label}
+      onFocus={(e) => onShowTip(label, e.currentTarget)}
+      onBlur={onHideTip}
+      // mouseover, not mouseenter: it fires again on every move between the
+      // label and the ✕, so the tooltip is re-decided each time rather than
+      // staying hidden after the pointer has once touched the ✕.
+      onMouseOver={(e) => {
+        setHover(true);
+        // Over the ✕ the label tooltip would sit on top of the ✕'s own hint —
+        // drop it and let the remove hint speak for itself.
+        if ((e.target as HTMLElement).closest('button')) onHideTip();
+        else onShowTip(label, e.currentTarget);
+      }}
+      onMouseLeave={() => {
+        setHover(false);
+        onHideTip();
+      }}
+    >
+      <span style={ccV2.bFav(favColor)}>{icon}</span>
+      <span style={ccV2.bTabLabel}>{label}</span>
+      <button
+        type="button"
+        style={ccV2.bTabX(on)}
+        title={t('common.removeFromComparison')}
+        aria-label={`${t('common.removeFromComparison')}: ${label}`}
+        // stopPropagation because focusin bubbles — without it the tab's own
+        // onFocus would put the label tooltip back over the ✕'s hint.
+        onFocus={(e) => { e.stopPropagation(); onHideTip(); }}
+        onClick={(e) => { e.stopPropagation(); onClose(); }}
+      >
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+          <path d="M3 3l6 6M9 3l-6 6"></path>
+        </svg>
+      </button>
+    </div>
+  );
+}
 
 // ── Coverage lens bar: two rows of browser tabs (Cases / Plans) ──
 // Sits ABOVE the whole combined panel; controls cv.mode + focus selection.
@@ -37,43 +127,21 @@ export function CoverageTabsBar({
       <path d="M4 4.5h4M4 6.5h4M4 8.5h2.5"></path>
     </svg>
   );
-  const TabBtn = ({
-    favColor,
-    icon,
-    label,
-    on,
-    onClick,
-    onClose,
-  }: {
-    favColor: string;
-    icon: React.ReactNode;
-    label: string;
-    on: boolean;
-    onClick: () => void;
-    onClose: () => void;
-  }) => (
-    <button
-      style={ccV2.bTab(on)}
-      onClick={onClick}
-      role="tab"
-      aria-selected={on}
-      onMouseEnter={(e) => { if (!on) e.currentTarget.style.background = 'rgba(255,255,255,0.55)'; }}
-      onMouseLeave={(e) => { if (!on) e.currentTarget.style.background = 'transparent'; }}
-    >
-      <span style={ccV2.bFav(favColor)}>{icon}</span>
-      <span style={ccV2.bTabLabel}>{label}</span>
-      <span
-        style={ccV2.bTabX(on)}
-        role="button"
-        title={t('common.removeFromComparison')}
-        onClick={(e) => { e.stopPropagation(); onClose(); }}
-      >
-        <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-          <path d="M3 3l6 6M9 3l-6 6"></path>
-        </svg>
-      </span>
-    </button>
-  );
+  // Tabs share the row width and ellipsis their labels (ccV2.bTabLabel), so a
+  // hovered tab shows its full text here. Anchored under the tab, clamped to the
+  // viewport so an edge tab's tooltip stays on screen.
+  const [tip, setTip] = useState<TipState | null>(null);
+  const showTip = (text: string, el: HTMLElement) => {
+    const r = el.getBoundingClientRect();
+    // Half of bTip's 320px max width, plus a margin. On a viewport too narrow to
+    // hold that (min > max), centring is the only placement that stays on screen.
+    const edge = 170;
+    const min = edge;
+    const max = window.innerWidth - edge;
+    const mid = r.left + r.width / 2;
+    setTip({ text, x: max <= min ? window.innerWidth / 2 : Math.min(Math.max(mid, min), max), y: r.bottom + 6 });
+  };
+  const hideTip = () => setTip(null);
   return (
     <div className="cc-tabsbar-wrap">
       <div className="cc-scroll-x" style={ccV2.tabStrip} role="tablist">
@@ -83,7 +151,10 @@ export function CoverageTabsBar({
         ) : (
           chosenCases.map((c) => {
             const tier = SURGERY_TIERS.find((x) => x.id === c.tier);
-            const label = tier ? `${pick(tier.short, lang)} · ${pickCaseShort(c, lang)}` : pickCaseShort(c, lang);
+            const shortName = pickCaseShort(c, lang);
+            // No tip prop: the tooltip is the label itself, which is the point —
+            // the tab ellipsises it and the tooltip is where it reads in full.
+            const label = tier ? `${pick(tier.short, lang)} · ${shortName}` : shortName;
             return (
               <TabBtn
                 key={c.id}
@@ -93,6 +164,8 @@ export function CoverageTabsBar({
                 on={mode === 'case' && c.id === resolvedCaseId}
                 onClick={() => { setMode('case'); cv.setFocusCaseId(c.id); }}
                 onClose={() => onRemoveCase(c.id)}
+                onShowTip={showTip}
+                onHideTip={hideTip}
               />
             );
           })
@@ -105,14 +178,16 @@ export function CoverageTabsBar({
         ) : (
           activePlans.map((p) => {
             const def = VHIS_PLANS.find((v) => v.id === p.id);
-            // When more than one deductible tier of the same ward is active,
-            // append the deductible so tabs stay distinguishable.
+            // Pink plans are picked per (ward × deductible) cell, so the tier is
+            // part of what was chosen — always name it. Other plans append it
+            // only when more than one tier of the same ward is active, to keep
+            // those tabs distinguishable.
             const sameIdCount = activePlans.filter((x) => x.id === p.id).length;
+            const showDeductible = p.id.startsWith('pink') || sameIdCount > 1;
             const baseLabel = def ? pick(def, lang) : p.id;
-            const label =
-              sameIdCount > 1
-                ? `${baseLabel} · ${t('chart.deductible')} ${p.deductible === 0 ? t('common.none') : fmtHK(p.deductible)}`
-                : baseLabel;
+            const label = showDeductible
+              ? `${baseLabel} · ${t('chart.deductible')} ${p.deductible === 0 ? t('common.none') : fmtHK(p.deductible)}`
+              : baseLabel;
             return (
               <TabBtn
                 key={`${p.id}-${p.deductible}`}
@@ -122,11 +197,18 @@ export function CoverageTabsBar({
                 on={mode === 'plan' && p.id === resolvedPlan?.id && p.deductible === resolvedPlan?.deductible}
                 onClick={() => { setMode('plan'); cv.setFocusPlan(p.id, p.deductible); }}
                 onClose={() => onRemove(p.id, p.deductible)}
+                onShowTip={showTip}
+                onHideTip={hideTip}
               />
             );
           })
         )}
       </div>
+      {tip && (
+        <div style={ccV2.bTip(tip.x, tip.y)} role="tooltip">
+          {tip.text}
+        </div>
+      )}
     </div>
   );
 }
