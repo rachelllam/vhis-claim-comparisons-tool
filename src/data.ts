@@ -315,7 +315,11 @@ export function casesFromIds(cases: SurgeryCase[], ids: string[]): SurgeryCase[]
 
 /* ── "Sort in order" comparators ──────────────────────────────────
    Both put a selection back into the order its left-rail picker lists the
-   options in. Unknown ids sink to the end rather than jumping to the front. */
+   options in. Unknown ids sink to the end rather than jumping to the front.
+
+   Both step through their keys with `!==` before subtracting, and return an
+   explicit 0 on a full tie: two unknowns rank Infinity, and subtracting those
+   from each other would hand sort() a NaN it silently reads as 0. */
 
 // Position of a plan id in the plan picker's declared order.
 export const planIndex = (id: string): number => {
@@ -326,7 +330,13 @@ export const planIndex = (id: string): number => {
 // Plan picker order, then ascending deductible — which is how the pink
 // ward×deductible matrix lays its cells out (deductibles: [0, 20000, 50000, 80000]).
 export const sortPlans = (plans: SelectedPlan[]): SelectedPlan[] =>
-  plans.slice().sort((a, b) => planIndex(a.id) - planIndex(b.id) || a.deductible - b.deductible);
+  plans.slice().sort((a, b) => {
+    const pa = planIndex(a.id);
+    const pb = planIndex(b.id);
+    if (pa !== pb) return pa - pb;
+    if (a.deductible !== b.deductible) return a.deductible - b.deductible;
+    return 0;
+  });
 
 // Case picker order: surgery tier (the tier cards scope the list), then the
 // position within `cases` — the operations endpoint's own order, which is the
@@ -337,6 +347,8 @@ export const sortCaseIds = (cases: SurgeryCase[], ids: string[]): string[] => {
   return ids.slice().sort((a, b) => {
     const [ta, ia] = of(a);
     const [tb, ib] = of(b);
-    return ta - tb || ia - ib;
+    if (ta !== tb) return ta - tb;
+    if (ia !== ib) return ia - ib;
+    return 0;
   });
 };
