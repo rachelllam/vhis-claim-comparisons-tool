@@ -440,6 +440,7 @@ export function ChartPanel({
   /* ── BY PLAN: one plan (chip-picked) × all selected cases ── */
   const focus = activePlans.find((p) => p.id === cv.focusPlanId && p.deductible === cv.focusPlanDeductible) || activePlans[0];
   const focusDef = focus ? VHIS_PLANS.find((v) => v.id === focus.id) : null;
+  const focusPrem = focus ? premOf(focus.id) : null;
 
   return (
     <div>
@@ -459,7 +460,7 @@ export function ChartPanel({
             <h3 style={ccDetail.thShort}>{pick(focusDef, lang)}</h3>
             <div style={ccDetail.thOfficial}>
               {t('chart.deductible')} {focus.deductible === 0 ? t('common.none') : fmtHK(focus.deductible)}
-              {showPrem && premOf(focus.id) != null ? ` · HK$${premOf(focus.id)!.toLocaleString('en-US')}${t('common.perMonth')}` : ''}
+              {focusPrem != null ? ` · HK$${focusPrem.toLocaleString('en-US')}${t('common.perMonth')}` : ''}
             </div>
           </div>
 

@@ -35,7 +35,9 @@ const en = {
   "topbar.toolBadge": "Claim Comparison",
   "topbar.quotes": "Quotes",
   "topbar.quotesTitle": "Show indicative monthly premiums",
-  "topbar.sort": "Sort plans & cases in order",
+  // Doubles as the button's aria-label, so "and" rather than "&" — screen
+  // readers announce the ampersand.
+  "topbar.sort": "Sort plans and cases in order",
   "topbar.clearAll": "Clear all",
 
   // ── left rail tabs ──

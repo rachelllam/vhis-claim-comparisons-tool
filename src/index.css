@@ -444,7 +444,12 @@ body {
     visibility 120ms ease;
   z-index: 40;
 }
+/* :active covers touch, where there is no hover — a press (or long-press,
+   before the tap registers) shows the label. Deliberately NOT plain :focus: a
+   button keeps focus after a mouse click, so the tip would hang around after
+   the pointer has moved on. */
 .cc-topbar-sort:hover:not(:disabled) .cc-topbar-sort-tip,
+.cc-topbar-sort:active:not(:disabled) .cc-topbar-sort-tip,
 .cc-topbar-sort:focus-visible .cc-topbar-sort-tip {
   opacity: 1;
   visibility: visible;
