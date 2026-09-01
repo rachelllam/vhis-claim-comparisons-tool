@@ -391,6 +391,70 @@ body {
   left: calc(100% - (22px * var(--bt-hd)) - 2px);
 }
 
+/* — "Sort in order": 28×28 icon pill, ported from the cp-header spec — */
+.cc-topbar-sort {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: calc(28px * var(--bt-hd));
+  height: calc(28px * var(--bt-hd));
+  border-radius: var(--bt-radius-pill);
+  border: 1.5px solid var(--bt-stone);
+  background: var(--bt-white);
+  color: var(--bt-graphite);
+  cursor: pointer;
+  transition: all var(--bt-duration-fast) var(--bt-ease);
+}
+/* The icon's own px can't carry the --bt-hd multiplier from an SVG attribute. */
+.cc-topbar-sort svg {
+  /* spec 15px */
+  width: calc(15px * var(--bt-hd));
+  height: auto;
+}
+.cc-topbar-sort:hover:not(:disabled) {
+  border-color: var(--bt-bowtie-pink);
+  color: var(--bt-bowtie-pink);
+}
+.cc-topbar-sort:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+/* Instant hover tooltip, centred beneath the button — the native title is slow
+   to appear and invisible to touch. */
+.cc-topbar-sort-tip {
+  position: absolute;
+  top: calc(100% + (8px * var(--bt-hd)));
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  /* spec 11px */
+  font: 600 calc(11px * var(--bt-hd)) / 1 var(--bt-font);
+  color: var(--bt-graphite);
+  background: var(--bt-white);
+  border: 1px solid var(--bt-stone);
+  border-radius: var(--bt-radius-s);
+  padding: calc(5px * var(--bt-hd)) calc(9px * var(--bt-hd));
+  box-shadow: var(--bt-shadow-1);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 120ms ease,
+    visibility 120ms ease;
+  z-index: 40;
+}
+/* :active covers touch, where there is no hover — a press (or long-press,
+   before the tap registers) shows the label. Deliberately NOT plain :focus: a
+   button keeps focus after a mouse click, so the tip would hang around after
+   the pointer has moved on. */
+.cc-topbar-sort:hover:not(:disabled) .cc-topbar-sort-tip,
+.cc-topbar-sort:active:not(:disabled) .cc-topbar-sort-tip,
+.cc-topbar-sort:focus-visible .cc-topbar-sort-tip {
+  opacity: 1;
+  visibility: visible;
+}
+
 /* — Root shell: fixed viewport, panels scroll independently, page never scrolls — */
 html,
 body {
@@ -1099,8 +1163,9 @@ input[type="number"]::-webkit-outer-spin-button {
   gap: 8px;
   min-width: 0;
 }
-/* Matches .cc-panel-h1 so this title reads as a peer of the chart column's
-   heading beside it — minus the margin, since it sits in a flex row. */
+/* Matches the chart column's case/plan title (ccDetail.thShort) so the two
+   columns' headings read as peers — minus the margin, since it sits in a
+   flex row. */
 .cc-msg-title {
   font: 700 26px/1.3 var(--bt-font);
   color: var(--bt-bowtie-blue);

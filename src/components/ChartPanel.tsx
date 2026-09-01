@@ -402,30 +402,18 @@ export function ChartPanel({
   const [detailCase, setDetailCase] = useState<SurgeryCase | null>(null);
   const modal = detailCase && <InternalDetailModal caseItem={detailCase} onClose={() => setDetailCase(null)} />;
 
-  const Header = () => (
-    <div>
-      <h2 className="cc-panel-h1" style={{ marginBottom: 4 }}>
-        {t('chart.title')}
-      </h2>
-    </div>
-  );
-
   /* ── BY CASE: one case (chip-picked) × all plans ── */
   if (mode === 'case') {
     const focusCase = chosenCases.find((c) => c.id === cv.focusCaseId) || chosenCases[0];
     if (!focusCase) {
       return (
         <div>
-          <Header />
-          <div style={{ marginTop: 18 }}>
-            <PromptBox title={t('chart.pickCasesTitle')} sub={t('chart.pickCasesSub')} />
-          </div>
+          <PromptBox title={t('chart.pickCasesTitle')} sub={t('chart.pickCasesSub')} />
         </div>
       );
     }
     return (
       <div>
-        <Header />
         <TreatmentHeader focusCase={focusCase} onOpenDetail={() => setDetailCase(focusCase)} />
         <Legend showDeductible={activePlans.some((p) => p.deductible > 0)} />
 
@@ -452,30 +440,33 @@ export function ChartPanel({
   /* ── BY PLAN: one plan (chip-picked) × all selected cases ── */
   const focus = activePlans.find((p) => p.id === cv.focusPlanId && p.deductible === cv.focusPlanDeductible) || activePlans[0];
   const focusDef = focus ? VHIS_PLANS.find((v) => v.id === focus.id) : null;
+  const focusPrem = focus ? premOf(focus.id) : null;
 
   return (
     <div>
-      <Header />
-
       {activePlans.length === 0 && (
-        <div style={{ marginTop: 18 }}>
+        <div>
           <PromptBox title={t('chart.pickPlansTitle')} sub={t('chart.pickPlansSub')} />
         </div>
       )}
 
       {activePlans.length > 0 && focusDef && focus && (
         <>
+          {/* The focused plan names the view, the way the focused case names the
+              by-case view (TreatmentHeader). Same h3 type as its thShort title,
+              with the deductible and premium as the sub-line — so the plan cell
+              comes out of the term strip below. */}
+          <div style={{ ...ccDetail.thNames, marginBottom: 14 }}>
+            <h3 style={ccDetail.thShort}>{pick(focusDef, lang)}</h3>
+            <div style={ccDetail.thOfficial}>
+              {t('chart.deductible')} {focus.deductible === 0 ? t('common.none') : fmtHK(focus.deductible)}
+              {focusPrem != null ? ` · HK$${focusPrem.toLocaleString('en-US')}${t('common.perMonth')}` : ''}
+            </div>
+          </div>
+
           <Legend showDeductible={focus.deductible > 0} />
 
           <div style={ccV2.strip}>
-            <div style={ccV2.stripCell}>
-              <span style={ccV2.stripKicker}>{t('chart.planLabel')}</span>
-              <span style={ccV2.stripBig}>{pick(focusDef, lang)}</span>
-              <span style={ccV2.stripSmall}>
-                {t('chart.deductible')} {focus.deductible === 0 ? t('common.none') : fmtHK(focus.deductible)}
-                {showPrem && premOf(focus.id) != null ? ` · HK$${premOf(focus.id)!.toLocaleString('en-US')}${t('common.perMonth')}` : ''}
-              </span>
-            </div>
             <PlanTermCells plan={focusDef} deductible={focus.deductible} />
           </div>
 

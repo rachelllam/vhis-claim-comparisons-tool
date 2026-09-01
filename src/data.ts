@@ -8,6 +8,8 @@
 // colours) and the pure coverage-math helpers stay local; they are not operation
 // data.
 
+import type { SelectedPlan } from './types';
+
 export type Gender = 'all' | 'male' | 'female';
 export type AgeBucket = 'all' | '40-59' | '60+';
 export type TierId = 'minor' | 'intermediate' | 'major' | 'complex';
@@ -303,10 +305,50 @@ export const repCaseIdsByTier = (cases: SurgeryCase[]): string[] =>
 
 export const tierIndex = (id: TierId): number => SURGERY_TIERS.findIndex((t) => t.id === id);
 
-// Resolve + order a set of case ids (by tier, then cost).
+// Resolve a set of case ids, PRESERVING the order of `ids` — that order is the
+// pick order the tab strips show, and what "Sort in order" (sortCaseIds) rewrites.
+// Ids with no matching case (e.g. after the endpoint drops an operation) fall out.
 export function casesFromIds(cases: SurgeryCase[], ids: string[]): SurgeryCase[] {
-  return cases
-    .filter((c) => ids.includes(c.id))
-    .slice()
-    .sort((a, b) => tierIndex(a.tier) - tierIndex(b.tier) || a.cost - b.cost);
+  const byId = new Map(cases.map((c) => [c.id, c]));
+  return ids.map((id) => byId.get(id)).filter((c): c is SurgeryCase => Boolean(c));
 }
+
+/* ── "Sort in order" comparators ──────────────────────────────────
+   Both put a selection back into the order its left-rail picker lists the
+   options in. Unknown ids sink to the end rather than jumping to the front.
+
+   Both step through their keys with `!==` before subtracting, and return an
+   explicit 0 on a full tie: two unknowns rank Infinity, and subtracting those
+   from each other would hand sort() a NaN it silently reads as 0. */
+
+// Position of a plan id in the plan picker's declared order.
+export const planIndex = (id: string): number => {
+  const i = VHIS_PLANS.findIndex((p) => p.id === id);
+  return i === -1 ? Infinity : i;
+};
+
+// Plan picker order, then ascending deductible — which is how the pink
+// ward×deductible matrix lays its cells out (deductibles: [0, 20000, 50000, 80000]).
+export const sortPlans = (plans: SelectedPlan[]): SelectedPlan[] =>
+  plans.slice().sort((a, b) => {
+    const pa = planIndex(a.id);
+    const pb = planIndex(b.id);
+    if (pa !== pb) return pa - pb;
+    if (a.deductible !== b.deductible) return a.deductible - b.deductible;
+    return 0;
+  });
+
+// Case picker order: surgery tier (the tier cards scope the list), then the
+// position within `cases` — the operations endpoint's own order, which is the
+// order the rail renders inside one tier.
+export const sortCaseIds = (cases: SurgeryCase[], ids: string[]): string[] => {
+  const rank = new Map(cases.map((c, i) => [c.id, [tierIndex(c.tier), i] as const]));
+  const of = (id: string) => rank.get(id) || ([Infinity, Infinity] as const);
+  return ids.slice().sort((a, b) => {
+    const [ta, ia] = of(a);
+    const [tb, ib] = of(b);
+    if (ta !== tb) return ta - tb;
+    if (ia !== ib) return ia - ib;
+    return 0;
+  });
+};
