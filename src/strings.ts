@@ -35,6 +35,9 @@ const en = {
   "topbar.toolBadge": "Claim Comparison",
   "topbar.quotes": "Quotes",
   "topbar.quotesTitle": "Show indicative monthly premiums",
+  // Doubles as the button's aria-label, so "and" rather than "&" — screen
+  // readers announce the ampersand.
+  "topbar.sort": "Sort plans and cases in order",
   "topbar.clearAll": "Clear all",
 
   // ── left rail tabs ──
@@ -52,7 +55,6 @@ const en = {
   "gate.retry": "Retry",
 
   // ── coverage chart ──
-  "chart.title": "Surgery Payout Estimator",
   "chart.estimateDisclaimer":
     "Figures are estimates for operation-related benefits only, meant to help you compare plans at a glance. For exact coverage or an actual claim, please refer to the benefit schedule.",
   "chart.pickCasesTitle": "Pick cases to compare",
@@ -90,7 +92,6 @@ const en = {
   "chart.inpatient": "Inpatient",
   "chart.night": "night",
   "chart.nights": "nights",
-  "chart.planLabel": "Plan",
   "chart.annualBenefitLimit": "Annual benefit limit",
   // Shown for every plan, whether or not it carries them: a plan with no SMM
   // rider reads "N/A", and one with no lifetime cap reads "No cap".
@@ -247,6 +248,7 @@ const zh: Record<StringKey, string> = {
   "topbar.toolBadge": "賠償試算",
   "topbar.quotes": "報價",
   "topbar.quotesTitle": "顯示參考每月保費",
+  "topbar.sort": "按順序排列計劃及個案",
   "topbar.clearAll": "全部清除",
 
   // ── left rail tabs ──
@@ -263,7 +265,6 @@ const zh: Record<StringKey, string> = {
   "gate.retry": "重試",
 
   // ── coverage chart ──
-  "chart.title": "手術費賠償試算",
   "chart.estimateDisclaimer":
     "金額僅供參考，只計算手術相關保障，以快速了解不同計劃差異",
   "chart.pickCasesTitle": "選擇要比較的個案",
@@ -298,7 +299,6 @@ const zh: Record<StringKey, string> = {
   "chart.inpatient": "住院",
   "chart.night": "晚",
   "chart.nights": "晚",
-  "chart.planLabel": "計劃",
   "chart.annualBenefitLimit": "每年保障限額",
   "chart.smmLimit": "SMM 保障上限",
   "chart.lifetimeLimit": "終身保障限額",
